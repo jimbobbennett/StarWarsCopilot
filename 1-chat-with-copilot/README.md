@@ -216,10 +216,17 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
 
     This code will loop forever, getting input from the users console. It will then send that input to the LLM, and print the response to the console.
 
+    ```mermaid
+    flowchart TD
+        A[Prompt] --> B[LLM]
+        B --> C[Response]
+        C --> A
+    ```
+
 1. Run the code to interact with the LLM. When prompted with `User >`, type your prompt and press return. You will see some logging messages, and the response from the LLM. Press return on an empty input to end the program.
 
     ```output
-    ➜  StarWarsCopilot dotnet run
+    ➜ dotnet run
     User > hello
     trce: Microsoft.Extensions.AI.LoggingChatClient[805843669]
           GetResponseAsync invoked: [
@@ -281,6 +288,7 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
     ```
 
     You will notice that the response isn't what you would expect - you would expect the second question "What about Kansas?" to refer to the previous question, and the LLM would reply by giving the capital city of Kansas.
+
 
 ## Summary
 

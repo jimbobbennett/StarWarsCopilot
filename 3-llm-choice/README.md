@@ -33,7 +33,7 @@ Let's try our copilot using a DeepSeek model
     dotnet add package Microsoft.Extensions.AI.AzureAIInference --prerelease
     ```
 
-1. Change the declaration of the `innerClient` to use the Azure AI Inference SDK:
+1. Comment out the declaration of the `innerClient`, and add this below it to use the Azure AI Inference SDK:
 
     ```cs
     var innerClient = new Azure.AI.Inference.ChatCompletionsClient(new Uri(llmOptions.Endpoint),
@@ -57,6 +57,93 @@ So far you have run your copilot using models deployed to the cloud, running on 
 
 The way round this is to use SLMs - small language models. Like LLMs, or large language models, these are trained on massive amounts of knowledge and you can have a conversation with them, but unlike LLMs they are small enough to run locally, especially on the latest generation of computer hardware that has powerful GPUs on device.
 
-Foundry Local is a tool for running AI models locally, taking advantage of your GPU to run SLMs. Foundry local can manage downloading and installing models, as well as running them using an OpenAI API compatible interface.
+Foundry Local is a tool for running AI models locally, taking advantage of your GPU to run SLMs. Foundry Local can manage downloading and installing models, as well as running them using an OpenAI API compatible interface.
 
-1. Install Foundry local by following the instructions in the [Foundry local quickstart](https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started#quickstart)
+### Set up Foundry Local
+
+1. Install Foundry Local by following the instructions in the [Foundry Local quickstart](https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started#quickstart)
+
+1. Download the Phi-4-mini model:
+
+    ```bash
+    foundry model download phi-4-mini
+    ```
+
+1. Test the local model:
+
+    ```bash
+    ➜ foundry model run phi-4-mini
+    ``
+
+    This will start a simple chatbot, so ask the LLM a question to make sure it is running.
+
+    ```output
+    foundry model run phi-4-mini
+    🟢 Service is Started on http://localhost:5273, PID 63491!
+    Model Phi-4-mini-instruct-generic-gpu was found in the local cache.
+    🕘 Loading model... 
+    🟢 Model Phi-4-mini-instruct-generic-gpu loaded successfully
+    
+    Interactive Chat. Enter /? or /help for help.
+    
+    Interactive mode, please enter your prompt
+    > Hello there
+    🤖 Hello! How can I assist you today?
+    ```
+
+### Call Foundry Local from your copilot
+
+You can interact with models on Foundry Local using the OpenAI SDK.
+
+1. Install the Foundry Local and OpenAI nuget packages:
+
+    ```bash
+    dotnet add package Microsoft.AI.Foundry.Local --prerelease
+    dotnet add package OpenAI
+    ```
+
+1. Update the `ModelId` in your `appsettings.json` file to be `phi-4-mini`.
+
+1. Add using directives for Foundry Local and the OpenAI SDK to the top of your `Program.cs`:
+
+    ```cs
+    using Microsoft.AI.Foundry.Local;
+    using OpenAI;
+    ```
+
+1. Comment out the declaration of the `innerClient`, and add this below it to ensure Foundry Local model is running:
+
+    ```cs
+    // Start the Foundry Local model
+    var manager = await FoundryLocalManager.StartModelAsync(llmOptions.ModelId);
+    ```
+
+1. Add this code to create the OpenAI client:
+
+    ```cs
+    var model = await manager.GetModelInfoAsync(llmOptions.ModelId);
+    var key = new ApiKeyCredential(manager.ApiKey);
+    var openAIClient = new OpenAIClient(key, new OpenAIClientOptions
+    {
+        Endpoint = manager.Endpoint
+    });
+    ```
+
+1. Now create the inner client from the OpenAI client:
+
+    ```cs
+    // Create the client using the model Id from the model info, NOT the model Id from the app settings
+    var innerClient = openAIClient.GetChatClient(model!.ModelId).AsIChatClient();
+    ```
+
+    Again, this code uses the `IChatClient` so that the rest of our application doesn't need to change.
+
+1. When you run this code, it will be slower to start up as the model is being activated. If you use Task Manager on Windows or Activity Monitor on macOS, you will see an Inferencing Service Agent using somewhere around 5GB of RAM to host the model locally.
+
+1. Everything is now running locally. To prove this, disconnect from the internet and try running your model again.
+
+## Summary
+
+In this part you connected different LLMs to your copilot, including running a model locally.
+
+In the [next part](../4-call-tools/README.md) you will learn how to call tools to expand the knowledge of your copilot.

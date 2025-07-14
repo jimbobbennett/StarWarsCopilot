@@ -35,11 +35,11 @@ The reason the LLM is unable to tie one question back to a previous question is 
 
     > The term **prompt** is usually used to define messages sent by the user, and message is a term for all messages, both ones sent by the user and responses.
 
-1. Save the output from the LLM to the char history as an **Assistant** message. Add the following code after the call to the LLM:
+1. Save the output from the LLM to the chat history as an **Assistant** message. Add the following code after the call to the LLM:
 
     ```cs
     // Add the AI response to the chat history
-    history.Add(new ChatMessage(ChatRole.Assistant, result.Messages[0].Text ?? string.Empty));
+    history.Add(new ChatMessage(ChatRole.Assistant, result.Messages.Last()?.Text ?? string.Empty));
     ```
 
 1. Check your code - the while loop should now be replaced with this code:
@@ -66,12 +66,14 @@ The reason the LLM is unable to tie one question back to a previous question is 
         var result = await chatClient.GetResponseAsync(history);
     
         // Add the AI response to the chat history
-        history.Add(new ChatMessage(ChatRole.Assistant, result.Messages[0].Text ?? string.Empty));
+        history.Add(new ChatMessage(ChatRole.Assistant, result.Messages.Last()?.Text ?? string.Empty));
     
         // Print the results
-        Console.WriteLine("Assistant > " + result);
+        Console.WriteLine("Assistant > " + result.Messages.Last()?.Text);
     }
     ```
+
+    The result can have multiple messages, so we want the last one. We'll see what other messages might be there in a later part.
 
 1. Run your code and ask the same two questions. This time, the answer to the second will take into consideration the first (the logging is not showing here).
 
@@ -85,6 +87,13 @@ The reason the LLM is unable to tie one question back to a previous question is 
     The logging for the second question will show 3 items in the `ChatHistory`, the first user question, the assistant response, and the second user question.
 
     If you look at the number of prompt tokens used, you will see the second question now uses a lot more. When you ran it before (assuming you asked the given questions) then the second question used 10 prompt tokens. Now it uses 36 - the additional tokens come from sending the previous user and assistant messages.
+
+    ```mermaid
+    flowchart TD
+        A[Prompt with history] --> B[LLM]
+        B --> C[Response added to history]
+        C --> A
+    ```
 
 ## Add a system prompt
 
@@ -114,6 +123,14 @@ There are more types of messages. One very important one is the **System Prompt*
     In the output you should see the system prompt as well as the user question. The response will be a shorter answer - "Jefferson City".
 
     > You pay for LLMs per token, so shorter answers will save you money eventually, though you have to consider the cost of the tokens for the system prompt.
+
+    ```mermaid
+    flowchart TD
+        S[System prompt] --> A[Prompt with history]
+        A --> B[LLM]
+        B --> C[Response added to history]
+        C --> A
+    ```
 
 ## Add Star Wars features in your system prompt
 
@@ -155,7 +172,7 @@ Now that we have a chat tool that we can tweak to work the way we want via the s
 1. Run your app and give it the appropriate greeting!
 
     ```cs
-    ➜  StarWarsCopilot dotnet run
+    ➜ dotnet run
     User > hello there
     Assistant > General Kenobi!
     ```
