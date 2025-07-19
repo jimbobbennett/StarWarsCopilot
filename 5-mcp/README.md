@@ -16,10 +16,11 @@ This becomes a lot of work if we have a lot of tools. There's also different way
 
 [**MCP**, or **Model Context Protocol**](https://modelcontextprotocol.io/introduction) is designed to solve this - it is a protocol to define a tool you can either call by running a separate process, or by calling a well-defined API. This way you once you have the ability to call MCP tools in your app, you can add new tools at run time, deploy new versions of tools without changing your app, and interact with off-the-shelf tools.
 
-MCP has 2 parts - client and server.
+MCP has 3 parts - servers, a client, and a host.
 
-- A **Server** is an application that provides tools
-- The **client** is your AI app. This registers one or more servers that it can call into.
+- A **Server** is an application that provides tools. This can run locally, or be accessed over a network connection, running on your network, or in the cloud.
+- The **client** is a component of AI app. This registers one or more servers that it can call into.
+- The **host** is the application that the client runs in.
 
 ```mermaid
 flowchart LR
@@ -44,9 +45,346 @@ flowchart LR
 
 [source](https://modelcontextprotocol.io/introduction#general-architecture)
 
-MCP was invented by Anthropic, the makers of Claude, in November 2024. As an open standard it's had a huge amount of traction, and has fast become the default protocol for how AI apps talk to tools. There are now literally hundreds if not thousands of off-the-shelf MCP servers you can call from your AI apps, and tools like Claude Desktop, GitHub Copilot, and Cursor supporting MCP.
+MCP was invented by Anthropic, the makers of Claude, in November 2024. As an open standard it's had a huge amount of traction, and has fast become the default protocol for how AI apps talk to external tools. There are now literally hundreds if not thousands of off-the-shelf MCP servers you can call from your AI apps, with apps like Claude Desktop, GitHub Copilot, and Cursor supporting MCP.
+
+MCP servers can contain multiple tools. Just like tools defined in your app in code, these tools have a natural language description for what they do, as well as a defined schema for the inputs they accept and the output they return. These inputs and outputs are again defined as a JSON schema.
+
+The power here is reusability - you can create an MCP server and call it from any MCP client, there's no need to build multiple versions of your tool in every application, or to confirm to different LLM SDKs.
+
+> You may have heard of GitHub copilot extensions - this was a similar idea to standardize tools, but you could only use GitHub Copilot extensions from inside GitHub copilot. MCP allows you to call tools from any MCP client, including GitHub copilot.
 
 ## Build an MCP server
 
 Our web search tool is working well for us, but would be better if we could move it out to an MCP server, then change our copilot to be an MCP client so we can add more MCP servers.
 
+There is an official C# MCP SDK supported by Microsoft that allows you to create MCP servers and clients in only a few lines of code.
+
+### Create the project
+
+1. Create a new folder called `WookiepediaMCPServer`, then in that folder create a new .NET console project.
+
+    ```bash
+    mkdir WookiepediaMCPServer
+    cd WookiepediaMCPServer
+    dotnet new console
+    ```
+
+1. Add nuget packages to read configuration, and the C# MCP SDK:
+
+    ```bash
+    dotnet add package Microsoft.Extensions.Hosting
+    dotnet add package Microsoft.Extensions.Configuration.Json
+    dotnet add package ModelContextProtocol --prerelease
+    ```
+
+1. Copy the `appsettings.json` and `ToolsOptions.cs` files from your Star Wars Copilot project into this folder - we can re-use these files to load the Tavily API key. You can remove the `LLM` section from the `appsettings.json` files.
+
+1. Change the namespace in the `ToolsOptions.cs` file to match the new project:
+
+    ```cs
+    namespace WookiepediaMCPServer;
+    ```
+
+### Set up the MCP server
+
+There are 2 ways for an MCP client to communicate with an MCP server - stdio or streamable HTTP. Stdio servers are processes that are launched by the MCP client, and they communicate over stdio - so over standard input and output, essentially sending and receiving JSON via the same protocol as `Console.ReadLine` and `Console.WriteLine`. Streamable HTTP servers are servers that are already running, and you stream data in and out over HTTP. Stdio is great for launching processes locally, and is generally the easiest. Streaming HTTP is used for persistent servers, such as those running over the internet.
+
+We are going to use stdio as it is easiest.
+
+1. Replace the code in `Program.cs` with the following:
+
+    ```cs
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
+    
+    var builder = Host.CreateApplicationBuilder(args);
+    builder.Logging.AddConsole(consoleLogOptions =>
+    {
+        // Configure all logs to go to stderr
+        consoleLogOptions.LogToStandardErrorThreshold = LogLevel.Trace;
+    });
+    
+    builder.Services
+        .AddMcpServer()
+        .WithStdioServerTransport()
+        .WithToolsFromAssembly();
+    
+    await builder.Build().RunAsync();
+    ```
+
+    This is the core of your MCP server - it creates an application builder with console logging, logging everything trace and above to stderr. The reason it uses stderr for everything is that you can't log anything to stdout as you would normally do. Stdout is used to get responses from the MCP server, so anything that is not a response to a call to the MCP server has to be sent to stderr, otherwise the MCP client will fail to understand it and throw errors.
+
+    It then adds 3 MCP services:
+
+    - An MCP Server, so the core functionality to run an MCP server
+    - Stdio server transport, providing access to the MCP server using stdio
+    - Tools from the assembly, so the builder scans the assembly and looks for tools, then exposes these automatically.
+
+    Once the builder has been created, the application is built and is run asynchronously. This starts the server and it stays running, listening on stdin for requests from an MCO client.
+
+### Add an MCP tool
+
+We have our server, now we need to add a new tool.
+
+1. Add a new file called `WookiepediaTool.cs` containing a static class called `WookiepediaTool` that has the `McpServerToolType` attribute:
+
+    ```cs
+    using System.ComponentModel;
+    using System.Text.Json;
+    
+    using Microsoft.Extensions.Configuration;
+    using ModelContextProtocol.Server;
+    
+    [McpServerToolType]
+    public static class WookiepediaTool
+    {
+    }
+    ```
+
+    The `McpServerToolType` tells the MCP server that this class contains tools it can use. This is scanned by the `WithToolsFromAssembly` call on the `builder`.
+
+1. Add a static constructor to load the options for the tool to get the API key. This :
+
+    ```cs
+    private readonly static ToolsOptions _toolsOptions = new();
+
+    static WookiepediaTool()
+    {
+        // Build the configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .Build();
+
+        // Get the Tools configuration
+        _toolsOptions = configuration.GetSection(ToolsOptions.SectionName)
+                                     .Get<ToolsOptions>()!;
+
+        if (_toolsOptions == null)
+        {
+            throw new InvalidOperationException("Tools configuration is missing. Please check your appsettings.json file.");
+        }
+    }
+    ```
+
+1. Add a function for the tool, decorated with the `MCPServerTool` attribute:
+
+    ```cs
+    private readonly static HttpClient _httpClient = new();
+
+    [McpServerTool(Name = "WookiepediaTool"),
+     Description("A tool for getting information on Star Wars from Wookiepedia. " +
+                 "This tool takes a prompt as a query and returns a list of results from Wookiepedia.")]
+    public static async Task<string> QueryTheWeb([Description("The query to search for information on Wookiepedia.")] string query)
+    {
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_toolsOptions.TavilyApiKey}");
+
+        var requestBody = new
+        {
+            query,
+            include_answer = "advanced",
+            include_domains = new[] { "https://starwars.fandom.com/" }
+        };
+
+        var content = new StringContent(JsonSerializer.Serialize(requestBody), System.Text.Encoding.UTF8, "application/json");
+        using var response = await _httpClient.PostAsync("https://api.tavily.com/search", content);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadAsStringAsync();
+    }
+    ```
+
+    This function is decorated with 2 attributes:
+
+    - `McpServerTool` - this tells the MCP server that this function is a tool. The `Name` property defines the name of the tool.
+    - `Description` - this is the `System.ComponentModel.Description` attribute that is used in a lot of situations. Here is defines the tool description. This description is the same description that you used for the tool in your code earlier.
+
+    The `query` parameter is exposed to the MCP client, so that it knows it needs to pass a query to this call. This is also decorated with the same `Description` attribute to describe the parameter as before.
+
+### Test your MCP server
+
+This is all the code you need for the MCP server, so let's test it using the MCP inspector. The MCP inspector is a tool that allows you to connect to MCP servers, inspect them, and call the tools.
+
+1. Run the following command to run the inspector:
+
+    ```bash
+    npx @modelcontextprotocol/inspector dotnet run --project <path>/WookiepediaMCPServer.csproj
+    ```
+
+    Replace `<path>` with the path of your project. This will start the inspector and configure it to connect to your project.
+
+    When you run the command, the inspector will load in your default browser.
+
+1. Select the **Connect** button. This will run your project using the command you provided when you launched it (`dotnet run --project <path>/WookiepediaMCPServer.csproj`), then connect over stdio.
+
+    ![The connect button](./img/inspector-connect.webp)
+
+    The server will show as connected:
+
+    ![The inspector showing it is connected](./img/inspector-connected.webp)
+
+    You will see the logs from the MCP server in the _Error output from the MCP Server_ section. Don't worry about these, they are not errors, just info logs, but we have to use stderr for any logging.
+
+1. Ensure **Tools** is selected in the top menu, then select the **List Tools** button to see the tools:
+
+    ![Listing the tools](./img/list-tools.gif)
+
+1. Once the tools are listed, you can test out the _WookiepediaTool_. Select it, and the tool details will show on the pane next to the tools list, showing the description, as well as an input box for the `query`. Enter a query and select **Run Tool**.
+
+    ![The result of asking the wookiepedia tool who is kay vess](./img/wookiepedia-tool-call.webp)
+
+## Add an MCP client to your copilot
+
+Now we have our server, we can call it from our copilot by adding an MCP client to the app.
+
+1. Open your `StarWarsCopilot` project.
+
+1. Add the MCP SDK to this project:
+
+    ```cs
+    dotnet add package ModelContextProtocol --prerelease
+    ```
+
+1. Comment out or delete the `WookiepediaTool` - you won't need this anymore as we are using the MCP server.
+
+### Add configuration for the tool
+
+1. You will need to store configuration to run the MCP server over stdio, so add the following to your `appsettings.json` file:
+
+    ```json
+    "MCPServers": {
+        "Name": "WookiepediaMCPServer",
+        "Command": "dotnet",,
+        "Arguments": [
+            "run", 
+            "--project",
+            "/Users/jimbobbennett/Desktop/WookiepediaMCPServer/WookiepediaMCPServer.csproj"
+        ]
+    }
+    ```
+
+    Replace `<path>` with the path to your MCP server project.
+
+1. Create a class to map these options. Create a new file called `MCPServerOptions.cs` with the following code:
+
+    ```cs
+    using System.ComponentModel.DataAnnotations;
+    
+    namespace StarWarsCopilot;
+    
+    /// <summary>
+    /// Configuration settings for MCP Servers
+    /// </summary>
+    public class MCPServerOptions
+    {
+        public const string SectionName = "MCPServers";
+    
+        /// <summary>
+        /// The name of the MCP server
+        /// </summary>
+        [Required]
+        public string Name { get; set; } = string.Empty;
+    
+        /// <summary>
+        /// The command to run the MCP server
+        /// </summary>
+        [Required]
+        public string Command { get; set; } = string.Empty;
+    
+        /// <summary>
+        /// The arguments to pass to the MCP server command
+        /// </summary>
+        [Required]
+        public List<string> Arguments { get; set; } = [];
+    }
+    ```
+
+1. In the `Program.cs` file, load these options. Add the following code after loading the LLM options. You can also remove the code to load the tool options.
+
+    ```cs
+    // Get the MCP Server configuration
+    var mcpServerOptions = configuration.GetSection(MCPServerOptions.SectionName)
+                                        .Get<MCPServerOptions>();
+    
+    if (mcpServerOptions == null)
+    {
+        throw new InvalidOperationException("MCP Server configuration is missing. Please check your appsettings.json file.");
+    }
+    ```
+
+### Create the MCP client
+
+1. At the top of the `Program.cs` file, add the following using directive:
+
+    ```cs
+    using ModelContextProtocol.Client;
+    ```
+
+1. Right before the `chatOptions` are defined, create an MCP client using the options loaded from your app settings:
+
+    ```cs
+    var clientTransport = new StdioClientTransport(new()
+    {
+        Name = mcpServerOptions.Name,
+        Command = mcpServerOptions.Command,
+        Arguments = mcpServerOptions.Arguments,
+    });
+    
+    await using var mcpClient = await McpClientFactory.CreateAsync(clientTransport,
+                                                                   loggerFactory: factory);
+    ```
+
+    This code creates a client transport over stdio with the command and arguments defined in your app settings, and uses this to create an MCP client. It also passes our logger factor to the create call to log the MCP interactions
+
+1. After this, load the tools from the MCP client and set these on the chat options. These tools are loaded in a compatible way for the chat options, so can be added to an array and passed to the options.
+
+    ```cs
+    var tools = await mcpClient.ListToolsAsync();
+    ChatOptions options = new() { Tools = [..tools] };
+    ```
+
+### Run the copilot
+
+1. Your copilot is now an MCP client! Run the copilot and ask about Kay Vess again:
+
+    ```bash
+    ➜ dotnet run                                          
+    User > Who is Kay Vess?
+    Assistant > Kay Vess, a young human female thief and criminal she is, hmmm. During the Galactic Civil War era, she operates. From the Worker's District in Canto Bight on Cantonica, she hails. Known by the alias Toren Valario Nupp she is. Leads her own criminal crew, she does, and pilots a prototype EML 850 light freighter called the Trailblazer. Through various heists and operations, she carries out her plans. The protagonist of the 2024 video game Star Wars Outlaws, Kay Vess is. Portrayed by the actress Humberly González, she is.
+    ```
+
+1. In the logs you will see the MCP client calling the MCP server:
+
+    ```output
+    trce: ModelContextProtocol.Client.McpClient[654635990]
+          WookiepediaMCPServer sending method 'initialize' request. Request: '{"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"StarWarsCopilot","version":"1.0.0.0"}},"id":1,"jsonrpc":"2.0"}'.
+    dbug: ModelContextProtocol.Client.McpClient[2125972309]
+          WookiepediaMCPServer waiting for response to request '1' for method 'initialize'.
+    dbug: ModelContextProtocol.Client.McpClient[330297028]
+          WookiepediaMCPServer read JsonRpcResponse message from channel.
+    trce: ModelContextProtocol.Client.McpClient[1370997154]
+          WookiepediaMCPServer Request response received for method initialize. Response: '{"protocolVersion":"2025-06-18","capabilities":{"logging":{},"tools":{"listChanged":true}},"serverInfo":{"name":"WookiepediaMCPServer","version":"1.0.0.0"}}'.
+    info: ModelContextProtocol.Client.McpClient[1434756563]
+          WookiepediaMCPServer client received server '{"name":"WookiepediaMCPServer","version":"1.0.0.0"}' capabilities: '{"logging":{},"tools":{"listChanged":true}}'.
+    trce: ModelContextProtocol.Client.McpClient[1672174748]
+          WookiepediaMCPServer sending message. Message: '{"method":"notifications/initialized","params":{},"jsonrpc":"2.0"}'.
+    info: ModelContextProtocol.Client.McpClientFactory[1458305598]
+          WookiepediaMCPServer client created and connected.
+    trce: ModelContextProtocol.Client.McpClient[654635990]
+          WookiepediaMCPServer sending method 'tools/list' request. Request: '{"method":"tools/list","params":{},"id":2,"jsonrpc":"2.0"}'.
+    dbug: ModelContextProtocol.Client.McpClient[2125972309]
+          WookiepediaMCPServer waiting for response to request '2' for method 'tools/list'.
+    dbug: ModelContextProtocol.Client.McpClient[330297028]
+          WookiepediaMCPServer read JsonRpcResponse message from channel.
+    trce: ModelContextProtocol.Client.McpClient[1370997154]
+          WookiepediaMCPServer Request response received for method tools/list. Response: '{"tools":[{"name":"WookiepediaTool","description":"A tool for getting information on Star Wars from Wookiepedia. This tool takes a prompt as a query and returns a list of results from Wookiepedia.","inputSchema":{"type":"object","properties":{"query":{"description":"The query to search for information on Wookiepedia.","type":"string"}},"required":["query"]}}]}'.
+    ```
+
+    This is initializing the connection to the tool, then listing the tools, the same as you did manually from the MCP inspector.
+
+## Summary
+
+In this part you learned all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
+
+In the [next part](../6-rag/README.md), you will learn about RAG and vector databases for storing and retrieving information for the LLM to use.

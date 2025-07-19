@@ -28,6 +28,8 @@ flowchart TD
     LTC --> R[Response]
 ```
 
+A tool is ideally designed to do one task. For example, if you wanted to model basic CRUD, you would have four tools - one tool to create a new record, one to replace a record, one to update, and one to delete.
+
 ## Expand your LLMs knowledge with a web search tool
 
 LLMs have access to their training data, but that's it. This means if your model was trained before a particular event happened, then the LLM will know nothing about it.
@@ -41,7 +43,9 @@ Assistant > Kay Vess, a Jedi Knight, is a fictional character from the Star Wars
 
 If you've played the game then you will know this is nonsense, hallucinated by the model.
 
-To help our LLM have better knowledge, we can add a tool that can do a web search. We will be doing this using the [Tavily API](https://www.tavily.com), a web search API designed to support LLMs.
+![Kay vess, a human female with shoulder length brown hair and bangs, wearing a blue leather looking jacket and grey-green top](./img/Kay_Vess.webp)
+
+To help our LLM have better knowledge, we can add a tool that can do a web search. We will be doing this using the [Tavily API](https://www.tavily.com), a web search API designed to support LLMs that we can point to Wookiepedia, the online encyclopedia of everything Star Wars.
 
 ### Use the Azure Open AI deployed LLM
 
@@ -131,7 +135,7 @@ curl -X POST https://api.tavily.com/search \
 }'
 ```
 
-It will send the query `"Who is Kay Vess"`, searching just `https://starwars.fandom.com/`, and requesting a summarized answer in the response. The response will be like this:
+It will send the query `"Who is Kay Vess"`, searching just Wookiepedia at `https://starwars.fandom.com/`, and requesting a summarized answer in the response. The response will be like this:
 
 ```json
 {
@@ -188,7 +192,7 @@ The `Microsoft.Extensions.AI` library has a base class for tools, `AIFunction`. 
 - Define their expected input as JSON so the LLM knows what to pass
 - Define the output so the LLM knows how to parse the response
 
-1. Create a new class called `TavilyTool` derived from `AIFunction` in a new file called `TavilyTool.cs`
+1. Create a new class called `WookiepediaTool` derived from `AIFunction` in a new file called `WookiepediaTool.cs`
 
 1. Add using directives for `System.Text.Json` and `Microsoft.Extensions.AI`, then add the API key to a primary constructor and save it in a field:
 
@@ -196,7 +200,7 @@ The `Microsoft.Extensions.AI` library has a base class for tools, `AIFunction`. 
     using System.Text.Json;
     using Microsoft.Extensions.AI;
     
-    class TavilyTool(string apiKey) : AIFunction
+    class WookiepediaTool(string apiKey) : AIFunction
     {
         private readonly string _apiKey = apiKey;
     }
@@ -205,15 +209,15 @@ The `Microsoft.Extensions.AI` library has a base class for tools, `AIFunction`. 
 1. This tool needs a name, so override the `Name` property:
 
     ```cs
-    public override string Name => "TavilyTool";
+    public override string Name => "WookiepediaTool";
     ```
 
 1. This tool needs a description to tell the LLM what it does, so override the `Description` property:
 
     ```cs
     public override string Description =>
-        "A tool for getting information from the web for particular topics. " +
-        "This tool takes a prompt as a query and returns a list of results from the web.";
+        "A tool for getting information on Star Wars from Wookiepedia. " +
+        "This tool takes a prompt as a query and returns a list of results from Wookiepedia.";
     ```
 
 1. The LLM needs to know the input to this tool. This is defined as a JSON schema, and is passed to the LLM by the tool setup. Override the `JsonSchema` property:
@@ -225,21 +229,24 @@ The `Microsoft.Extensions.AI` library has a base class for tools, `AIFunction`. 
             ""description"": ""{Description}"",
             ""type"": ""object"",
             ""properties"": {{
-                ""query"" : {{ ""type"": ""string"" }}
+                ""query"" : {{ 
+                    ""type"": ""string"",
+                    ""description"": ""The query to search for information on Wookiepedia.""
+                }}
             }},
             ""required"": [""query""]
         }}
     ").RootElement;
     ```
 
-    This tells the LLM the name and description of the tool, and that it requires a query passed as a `string`.
+    This tells the LLM the name and description of the tool, and that it requires a query passed as a `string` that is the query used to search the web. By providing a description for the tool and the parameters, the LLM can decide what tool to call, and how to extract information from the prompt to send as the input properties.
 
 1. The LLM also needs to know the output of the tool. Again, this is defined as a JSON schema. Override the `ReturnJsonSchema` property:
 
     ```cs
     public override JsonElement? ReturnJsonSchema => JsonDocument.Parse(@"
         {
-            ""title"": ""TavilyToolResult"",
+            ""title"": ""WookiepediaToolResult"",
             ""type"": ""object"",
             ""properties"": {
                 ""query"": { ""type"": ""string"" },
@@ -309,10 +316,11 @@ Now the tool is ready, it can be used in our app.
                         .Build();
     ```
 
-1. Immediately underneath this, define some chat options that include the new tool, setting the API key:
+1. Immediately underneath this, define some chat options that include the new tool, creating it and setting the API key. You can register multiple tools with an LLM by passing an array of tools to the options. In this case, the array has just one entry.
 
     ```cs
-    ChatOptions options = new() { Tools = [new TavilyTool(toolsOptions.TavilyApiKey)] };
+    IList<AITool> tools = [new WookiepediaTool(toolsOptions.TavilyApiKey)];
+    ChatOptions options = new() { Tools = tools };
     ```
 
 1. Add these options to the LLM call by passing them to `GetResponseAsync`:
@@ -331,7 +339,7 @@ Now the tool is ready, it can be used in our app.
             "Always respond in the style of Yoda, the wise Jedi Master." +
             "Give warnings about paths to the dark side." +
             "If the user says hello there, then only respond with General Kenobi! and nothing else." +
-            "If you are not sure about the answer, then use the TavilyTool to search the web."       // Add this line to encourage the LLM to call the tool
+            "If you are not sure about the answer, then use the WookiepediaTool to search the web."       // Add this line to encourage the LLM to call the tool
         )
     };
     ```
@@ -373,7 +381,7 @@ trce: Microsoft.Extensions.AI.LoggingChatClient[384896670]
               {
                 "$type": "functionCall",
                 "callId": "call_8SWMlOJuXQzudy95R8bK4rzc",
-                "name": "TavilyTool",
+                "name": "WookiepediaTool",
                 "arguments": {
                   "query": "Kay Vess"
                 }
@@ -431,7 +439,7 @@ The first message is the assistant response requesting the tool call:
         {
             "$type": "functionCall",
             "callId": "call_8SWMlOJuXQzudy95R8bK4rzc",
-            "name": "TavilyTool",
+            "name": "WookiepediaTool",
             "arguments": {
                 "query": "Kay Vess"
             }
@@ -440,7 +448,7 @@ The first message is the assistant response requesting the tool call:
 }
 ```
 
-This lists the name of the tool, `TavilyTool`, and the query `"query": "Kay Vess"`. It also defines a `callId` to tie the response back to the tool call. LLMs can request a call to multiple tools in the same response, so need to provide Ids to tie the responses back to the tool call requests.
+This lists the name of the tool, `WookiepediaTool`, and the query `"query": "Kay Vess"`. It also defines a `callId` to tie the response back to the tool call. LLMs can request a call to multiple tools in the same response, so need to provide Ids to tie the responses back to the tool call requests.
 
 The second message is the response of the tool call:
 
@@ -480,4 +488,4 @@ It's this last response we save to the chat history.
 
 In this part you learned how to call tools to expand the knowledge of your copilot.
 
-In the [next part](../5-mcp/README.md) you will learn all about MCP as a standard for tool calling.
+In the [next part](../5-mcp/README.md) you will learn all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
