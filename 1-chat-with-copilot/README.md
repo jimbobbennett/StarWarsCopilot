@@ -103,7 +103,7 @@ Your instructor will provide a temporary endpoint and API key for you to use dur
 
     // Build the configuration
     var configuration = new ConfigurationBuilder()
-        .SetBasePath(Directory.GetCurrentDirectory())
+        .SetBasePath(AppContext.BaseDirectory)
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
         .Build();
     

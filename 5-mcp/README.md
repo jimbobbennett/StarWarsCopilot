@@ -57,15 +57,17 @@ The power here is reusability - you can create an MCP server and call it from an
 
 Our web search tool is working well for us, but would be better if we could move it out to an MCP server, then change our copilot to be an MCP client so we can add more MCP servers.
 
+Lets build a Star Wars MCP server, with one tool for querying Wookiepedia.
+
 There is an official C# MCP SDK supported by Microsoft that allows you to create MCP servers and clients in only a few lines of code.
 
 ### Create the project
 
-1. Create a new folder called `WookiepediaMCPServer`, then in that folder create a new .NET console project.
+1. Create a new folder called `StarWarsMCPServer`, then in that folder create a new .NET console project.
 
     ```bash
-    mkdir WookiepediaMCPServer
-    cd WookiepediaMCPServer
+    mkdir StarWarsMCPServer
+    cd StarWarsMCPServer
     dotnet new console
     ```
 
@@ -79,10 +81,20 @@ There is an official C# MCP SDK supported by Microsoft that allows you to create
 
 1. Copy the `appsettings.json` and `ToolsOptions.cs` files from your Star Wars Copilot project into this folder - we can re-use these files to load the Tavily API key. You can remove the `LLM` section from the `appsettings.json` files.
 
+1. Add the following code to the `StarWarsMCPServer.csproj` file inside the `Project` section to ensure the app settings are loaded.
+
+    ```xml
+      <ItemGroup>
+        <None Update="appsettings.json">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+      </ItemGroup>
+    ```
+
 1. Change the namespace in the `ToolsOptions.cs` file to match the new project:
 
     ```cs
-    namespace WookiepediaMCPServer;
+    namespace StarWarsMCPServer;
     ```
 
 ### Set up the MCP server
@@ -127,7 +139,7 @@ We are going to use stdio as it is easiest.
 
 We have our server, now we need to add a new tool.
 
-1. Add a new file called `WookiepediaTool.cs` containing a static class called `WookiepediaTool` that has the `McpServerToolType` attribute:
+1. Add a new file called `StarWarsTools.cs` containing a static class called `StarWarsTools` that has the `McpServerToolType` attribute:
 
     ```cs
     using System.ComponentModel;
@@ -137,7 +149,7 @@ We have our server, now we need to add a new tool.
     using ModelContextProtocol.Server;
     
     [McpServerToolType]
-    public static class WookiepediaTool
+    public static class StarWarsTools
     {
     }
     ```
@@ -149,11 +161,11 @@ We have our server, now we need to add a new tool.
     ```cs
     private readonly static ToolsOptions _toolsOptions = new();
 
-    static WookiepediaTool()
+    static StarWarsTools()
     {
         // Build the configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .Build();
 
@@ -168,7 +180,7 @@ We have our server, now we need to add a new tool.
     }
     ```
 
-1. Add a function for the tool, decorated with the `MCPServerTool` attribute:
+1. Add a function for the Wookiepedia tool, decorated with the `MCPServerTool` attribute:
 
     ```cs
     private readonly static HttpClient _httpClient = new();
@@ -209,14 +221,14 @@ This is all the code you need for the MCP server, so let's test it using the MCP
 1. Run the following command to run the inspector:
 
     ```bash
-    npx @modelcontextprotocol/inspector dotnet run --project <path>/WookiepediaMCPServer.csproj
+    npx @modelcontextprotocol/inspector dotnet run --project <path>/StarWarsMCPServer.csproj
     ```
 
     Replace `<path>` with the path of your project. This will start the inspector and configure it to connect to your project.
 
     When you run the command, the inspector will load in your default browser.
 
-1. Select the **Connect** button. This will run your project using the command you provided when you launched it (`dotnet run --project <path>/WookiepediaMCPServer.csproj`), then connect over stdio.
+1. Select the **Connect** button. This will run your project using the command you provided when you launched it (`dotnet run --project <path>/StarWarsMCPServer.csproj`), then connect over stdio.
 
     ![The connect button](./img/inspector-connect.webp)
 
@@ -254,12 +266,12 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
 
     ```json
     "MCPServers": {
-        "Name": "WookiepediaMCPServer",
+        "Name": "StarWarsMCPServer",
         "Command": "dotnet",,
         "Arguments": [
             "run", 
             "--project",
-            "/Users/jimbobbennett/Desktop/WookiepediaMCPServer/WookiepediaMCPServer.csproj"
+            "<path>/StarWarsMCPServer/StarWarsMCPServer.csproj"
         ]
     }
     ```
@@ -329,7 +341,7 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
         Name = mcpServerOptions.Name,
         Command = mcpServerOptions.Command,
         Arguments = mcpServerOptions.Arguments,
-    });
+    }, loggerFactory: factory);
     
     await using var mcpClient = await McpClientFactory.CreateAsync(clientTransport,
                                                                    loggerFactory: factory);
@@ -358,27 +370,27 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
 
     ```output
     trce: ModelContextProtocol.Client.McpClient[654635990]
-          WookiepediaMCPServer sending method 'initialize' request. Request: '{"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"StarWarsCopilot","version":"1.0.0.0"}},"id":1,"jsonrpc":"2.0"}'.
+          StarWarsMCPServer sending method 'initialize' request. Request: '{"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"StarWarsCopilot","version":"1.0.0.0"}},"id":1,"jsonrpc":"2.0"}'.
     dbug: ModelContextProtocol.Client.McpClient[2125972309]
-          WookiepediaMCPServer waiting for response to request '1' for method 'initialize'.
+          StarWarsMCPServer waiting for response to request '1' for method 'initialize'.
     dbug: ModelContextProtocol.Client.McpClient[330297028]
-          WookiepediaMCPServer read JsonRpcResponse message from channel.
+          StarWarsMCPServer read JsonRpcResponse message from channel.
     trce: ModelContextProtocol.Client.McpClient[1370997154]
-          WookiepediaMCPServer Request response received for method initialize. Response: '{"protocolVersion":"2025-06-18","capabilities":{"logging":{},"tools":{"listChanged":true}},"serverInfo":{"name":"WookiepediaMCPServer","version":"1.0.0.0"}}'.
+          StarWarsMCPServer Request response received for method initialize. Response: '{"protocolVersion":"2025-06-18","capabilities":{"logging":{},"tools":{"listChanged":true}},"serverInfo":{"name":"StarWarsMCPServer","version":"1.0.0.0"}}'.
     info: ModelContextProtocol.Client.McpClient[1434756563]
-          WookiepediaMCPServer client received server '{"name":"WookiepediaMCPServer","version":"1.0.0.0"}' capabilities: '{"logging":{},"tools":{"listChanged":true}}'.
+          StarWarsMCPServer client received server '{"name":"StarWarsMCPServer","version":"1.0.0.0"}' capabilities: '{"logging":{},"tools":{"listChanged":true}}'.
     trce: ModelContextProtocol.Client.McpClient[1672174748]
-          WookiepediaMCPServer sending message. Message: '{"method":"notifications/initialized","params":{},"jsonrpc":"2.0"}'.
+          StarWarsMCPServer sending message. Message: '{"method":"notifications/initialized","params":{},"jsonrpc":"2.0"}'.
     info: ModelContextProtocol.Client.McpClientFactory[1458305598]
-          WookiepediaMCPServer client created and connected.
+          StarWarsMCPServer client created and connected.
     trce: ModelContextProtocol.Client.McpClient[654635990]
-          WookiepediaMCPServer sending method 'tools/list' request. Request: '{"method":"tools/list","params":{},"id":2,"jsonrpc":"2.0"}'.
+          StarWarsMCPServer sending method 'tools/list' request. Request: '{"method":"tools/list","params":{},"id":2,"jsonrpc":"2.0"}'.
     dbug: ModelContextProtocol.Client.McpClient[2125972309]
-          WookiepediaMCPServer waiting for response to request '2' for method 'tools/list'.
+          StarWarsMCPServer waiting for response to request '2' for method 'tools/list'.
     dbug: ModelContextProtocol.Client.McpClient[330297028]
-          WookiepediaMCPServer read JsonRpcResponse message from channel.
+          StarWarsMCPServer read JsonRpcResponse message from channel.
     trce: ModelContextProtocol.Client.McpClient[1370997154]
-          WookiepediaMCPServer Request response received for method tools/list. Response: '{"tools":[{"name":"WookiepediaTool","description":"A tool for getting information on Star Wars from Wookiepedia. This tool takes a prompt as a query and returns a list of results from Wookiepedia.","inputSchema":{"type":"object","properties":{"query":{"description":"The query to search for information on Wookiepedia.","type":"string"}},"required":["query"]}}]}'.
+          StarWarsMCPServer Request response received for method tools/list. Response: '{"tools":[{"name":"WookiepediaTool","description":"A tool for getting information on Star Wars from Wookiepedia. This tool takes a prompt as a query and returns a list of results from Wookiepedia.","inputSchema":{"type":"object","properties":{"query":{"description":"The query to search for information on Wookiepedia.","type":"string"}},"required":["query"]}}]}'.
     ```
 
     This is initializing the connection to the tool, then listing the tools, the same as you did manually from the MCP inspector.
@@ -387,4 +399,4 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
 
 In this part you learned all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
 
-In the [next part](../6-rag/README.md), you will learn about RAG and vector databases for storing and retrieving information for the LLM to use.
+In the [next part](../6-rag/README.md), you will learn about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
