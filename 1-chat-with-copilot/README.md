@@ -15,13 +15,13 @@ In this section you will scaffold a new C# project using `Microsoft.Extensions.A
 
 1. Inside this new folder, create a new .NET console project:
 
-    ```bash
+    ```bash Terminal
     dotnet new console
     ```
 
 1. Install the `Microsoft.Extensions.AI` nuget packages, as well as libraries for configuration, logging, and interacting with OpenAI on Azure:
 
-    ```bash
+    ```bash Terminal
     dotnet add package Azure.AI.OpenAI
     dotnet add package Microsoft.Extensions.Logging
     dotnet add package Microsoft.Extensions.Logging.Console
@@ -279,7 +279,7 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
     Assistant > Hello! How can I assist you today?
     ```
 
-    In the output you will also see logging information. This contains the prompt that was sent to the LLM, and the number of tokens used to send the prompt and get a response.
+    In the output you will also see logging information. This contains the prompt that was sent to the LLM, and the number of tokens used to send the prompt and get a response. Tokens are the representation that LLMs use - they don't work with text, instead they convert text to a numerical representation. Each token has a numerical value and represents either part of or a whole word.
 
 1. Ask a question, then ask a follow up question that relies on knowledge of the first question. For example, ask "What is the capital city of Missouri?", then ask "What about Kansas?". The response from the second question will be something like:
 
@@ -288,7 +288,6 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
     ```
 
     You will notice that the response isn't what you would expect - you would expect the second question "What about Kansas?" to refer to the previous question, and the LLM would reply by giving the capital city of Kansas.
-
 
 ## Summary
 

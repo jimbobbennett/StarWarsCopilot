@@ -55,7 +55,7 @@ az storage table create --account-name storagestarwars --name Orders
 az storage table create --account-name storagestarwars --name OrderFigurines
 ```
 
-Once the tables are created, run the `dataloader` project from the [`dataloader`](./dataloader/) folder to insert data.
+Once the tables are created, run the `DataLoader` project from the [`DataLoader`](./DataLoader/) folder to insert data.
 </details>
 
 This database has 3 tables:
@@ -128,6 +128,12 @@ The tool we will be adding can load details from the tables using one or more co
 
     ```bash
     dotnet add Azure.Data.Tables
+    ```
+
+1. Add a using directive for this package to the top of the `StarWarsTools` class:
+
+    ```cs
+    using Azure.Data.Tables;
     ```
 
 1. Add the following two helper functions to the `StarWarsTools` class:
