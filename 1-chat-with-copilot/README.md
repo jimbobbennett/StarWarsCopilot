@@ -15,13 +15,13 @@ In this section you will scaffold a new C# project using `Microsoft.Extensions.A
 
 1. Inside this new folder, create a new .NET console project:
 
-    ```bash Terminal
+    ```bash
     dotnet new console
     ```
 
 1. Install the `Microsoft.Extensions.AI` nuget packages, as well as libraries for configuration, logging, and interacting with OpenAI on Azure:
 
-    ```bash Terminal
+    ```bash
     dotnet add package Azure.AI.OpenAI
     dotnet add package Microsoft.Extensions.Logging
     dotnet add package Microsoft.Extensions.Logging.Console

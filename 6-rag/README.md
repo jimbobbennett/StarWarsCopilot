@@ -208,12 +208,12 @@ The tool we will be adding can load details from the tables using one or more co
             string.IsNullOrWhiteSpace(characterName) &&
             string.IsNullOrWhiteSpace(customerName))
         {
-            return "{\"error\": \"At least one parameter is required: orderNumber, characterName, or customerName.\"}";
+            return JsonSerializer.Serialize(new { error = "At least one parameter is required: orderNumber, characterName, or customerName." });
         }
 
         if (string.IsNullOrWhiteSpace(_toolsOptions.StorageConnectionString))
         {
-            return "{\"error\": \"Storage connection string is not configured.\"}";
+            return JsonSerializer.Serialize(new { error = "Storage connection string is not configured." });
         }
 
         var connStr = _toolsOptions.StorageConnectionString;
@@ -296,11 +296,11 @@ The tool we will be adding can load details from the tables using one or more co
 
     ![Order 66 showing a purchase of an Emperor Palpatine figurine](./img/order-66.webp)
 
-### Use the new tool
+## Use the new tool
 
 We've added the new tool to the MCP server. The MCP client in the copilot queries the MCP server and gets all the tools, so there is nothing we need to do to configure this new tool in the copilot, it just works!
 
-To try this out, run the copilot and ask questions about orders:
+To try this out, relaunch the copilot and ask questions about orders:
 
 ```output
 User > What was purchased in order 66? Give me details about the order including the customer, and details about the character.
