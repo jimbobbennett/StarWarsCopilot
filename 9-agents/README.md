@@ -42,7 +42,7 @@ You can think of AI agents a bit like event-driven serverless functions, such as
 
 ### AI agent capabilities
 
-AI agents are only as powerful as the tools you build to interact with them. If you call OpenAI to generate some code, it won't be able to change the code on your machine. Instead you would need a tool to take the results of the interaction with the LLM and have that interact with the code you have locally. This is how applications like GitHub copilot work, they use the LLM to reason over your request and code, then run locally to make code updates.
+AI agents are only as powerful as the tools you build to interact with them. If you call OpenAI to generate some code, it won't be able to change the code on your machine. Instead you would need a tool to take the results of the interaction with the LLM and have that interact with the code you have locally. This is how applications like GitHub copilot work, they use the LLM to reason over your request and code, then run tools locally to make code updates.
 
 ### AI agent orchestration
 
@@ -54,7 +54,7 @@ Agents can use handoff orchestration to transfer control from one agent to anoth
 
 [Semantic Kernel](https://learn.microsoft.com/semantic-kernel/) is Microsoft's AI application development framework, available for C#, Python, and Java. It allows you to integrate any AI model, add tool support via plugins, add basic application components like telemetry, connect other components, and orchestrate agents.
 
-When Semantic Kernel first came out, it was a pretty powerful framework, especially for planning actions based off prompts, using different LLMs with the same abstractions, and calling plugins, the Semantic Kernel name for tools. At the moment, such basic features are not really useful. By using `Microsoft.Extensions.AI`, it's easy to swap different LLMs in and out. By using MCP it's easy to add tools, and modern LLMs are great at planning.
+When Semantic Kernel first came out, it was a pretty powerful framework, especially for planning actions based off prompts, using different LLMs with the same abstractions, and calling plugins, the Semantic Kernel name for tools. At the moment such basic features are not really useful. By using `Microsoft.Extensions.AI`, it's easy to swap different LLMs in and out. By using MCP it's easy to add tools, and modern LLMs are great at planning.
 
 This means for applications like our copilot, frameworks like Semantic Kernel can be overkill. Where they are useful however, is when orchestrating agents.
 
@@ -196,11 +196,13 @@ As a sanity check, you can test the kernel to make sure the basics are configure
     dotnet run
     ```
 
-You will see a hello world style response in your terminal, along with a trace log:
+    You will see a hello world style response in your terminal, along with a trace log:
 
-```output
-Response: Hello! How can I assist you today?
-```
+    ```output
+    Response: Hello! How can I assist you today?
+    ```
+
+1. Delete these 2 new lines of code as they were just needed for a quick test.
 
 ### Add tools
 
@@ -293,6 +295,7 @@ The supervisor agent will be configured to hand off to the other agents as neede
 1. To use the Semantic Kernel agent framework, you need to install a couple of additional NuGet packages:
 
     ```bash
+    dotnet add package Microsoft.SemanticKernel.Agents.Core
     dotnet add package Microsoft.SemanticKernel.Agents.Orchestration --prerelease
     dotnet add package Microsoft.SemanticKernel.Agents.Runtime.InProcess --prerelease
     ```
@@ -483,7 +486,7 @@ When Semantic Kernel runs, it needs an agent thread runtime running. This runtim
 1. Start the agent orchestration:
 
     ```cs
-    var result = await orchestration.InvokeAsync(customerName, runtime);
+    var result = await orchestration.InvokeAsync(customerName!, runtime);
     ```
 
     This will start the agent thread running in the background. This call will return once the agent has started.
@@ -517,6 +520,8 @@ When Semantic Kernel runs, it needs an agent thread runtime running. This runtim
     "messageId": "chatcmpl-C3CRQ7rEo9gO57I7DhG0Ga44SDw7o"
     }
     ```
+
+    If you get an error with the text "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_8IAs38o7O5yOmeaYe8fhjb2i", then re-run the agent. LLMs are unreliable, so can make mistakes when orchestrating multiple agents and tools.
 
     > The customers are:
     > Luke Johnson
