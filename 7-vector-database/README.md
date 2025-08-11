@@ -88,7 +88,7 @@ You will be using Pinecone to store and index the scripts for some of the Star W
 1. Delete all the code in the `Program.cs` file, and add a using directive for Pinecone:
 
     ```cs
-    using Pinecone
+    using Pinecone;
     ```
 
 1. Declare a couple of variables for the Pinecone client, and index name. A Pinecone database is referred to as an index.
@@ -98,7 +98,7 @@ You will be using Pinecone to store and index the scripts for some of the Star W
     var indexName = "movie-scripts";
     ```
 
-    Replace `API_KEY` with your Pinecone API key.
+    Replace `API_KEY` with your Pinecone API key. This is a simple loader application that won't be used once the data has been uploaded, so it's ok to hard code the key here.
 
 1. Add the following code to create the index:
 
@@ -135,7 +135,7 @@ You will be using Pinecone to store and index the scripts for some of the Star W
 
 1. Next you need to upload the scripts. These need to be chunked, with each chunk uploaded and indexed. You will be using simple paragraph chunking, but there are many ways to do this and the best way depends on many factors including your data and the kind of application you are building.
 
-    > You can learn more int the [Pinecone chunking strategies documentation](https://www.pinecone.io/learn/chunking-strategies/).
+    > You can learn more in the [Pinecone chunking strategies documentation](https://www.pinecone.io/learn/chunking-strategies/).
 
     Add the following code to load the scripts, chunk them, then upload them:
 
@@ -228,7 +228,7 @@ You now have index data ready to search against. Now you can add a tool to the M
 
 ### Add the tool
 
-The tool you will be adding starts by creating the index if it doesn't exist, and uploads the scripts, using the built-in Pinecone models to create embeddings.
+The tool you will be adding queries the scripts using Pinecone.
 
 1. Install the Pinecone NuGet package:
 
@@ -359,7 +359,12 @@ The tool you will be adding starts by creating the index if it doesn't exist, an
 
     Review the results. You can click on each row, then on the fields, then on the chunk text to expand the chunk. For example, the result will contain this chunk:
 
-    > "Han, Luke, Chewie, and Artoo are still bound to their poles. Han is placed on a spit above what looks like a barbecue pit and the others are leaned against a tree nearby. Threepio's litter/throne is gently placed near the pit. He watches with rapt fascination. Han, Luke, and Chewie are less than fascinated."
+    ```json
+    {
+        "chunk_text": "The convoy moves up over a huge sand pit. The Sail Barge stops to one side of the depression, as does the escort skiff. But the prisoner's skiff moves out directly over the center and hovers. At the bottom of the deep cone of sand is a repulsive, mucous-lined hole, surrounded by thousands of needle-sharp teeth. This is the SARLACC. A plank is extended from the edge of the prisoner's skiff. Guards release Luke's bonds and shove him out onto the plank above the Sarlacc's mouth.",
+        "movie_name": "return-of-the-jedi"
+    }
+    ```
 
     There is no hole here, but the term "pit" is semantically similar to hole, so this result is returned.
 

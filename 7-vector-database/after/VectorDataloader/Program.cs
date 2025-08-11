@@ -1,7 +1,7 @@
 ﻿using Pinecone;
 
 var indexName = "movie-scripts";
-var pinecone = new PineconeClient("pcsk_4CDSVY_EX5dbQFLER2AMvp6kaUYEtsJcJ4YF6YU8f1C7ghRSf35FcxV4RyC5AqZEKK6Knb");
+var pinecone = new PineconeClient("API_KEY");
 
 // Create the index if it does not exist
 var createIndexRequest = new CreateIndexForModelRequest
