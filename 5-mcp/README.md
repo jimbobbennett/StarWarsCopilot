@@ -156,10 +156,12 @@ We have our server, now we need to add a new tool.
 
     The `McpServerToolType` tells the MCP server that this class contains tools it can use. This is scanned by the `WithToolsFromAssembly` call on the `builder`.
 
-1. Add a static constructor to load the options for the tool to get the API key. This :
+1. Add a static constructor to load the options for the tool to get the API key. This loads the configuration, then sets the Tavily API key as a header on the HTTP client:
 
     ```cs
     private readonly static ToolsOptions _toolsOptions = new();
+
+    private readonly static HttpClient _httpClient = new();
 
     static StarWarsTools()
     {
@@ -177,21 +179,19 @@ We have our server, now we need to add a new tool.
         {
             throw new InvalidOperationException("Tools configuration is missing. Please check your appsettings.json file.");
         }
+
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_toolsOptions.TavilyApiKey}");
     }
     ```
 
 1. Add a function for the Wookiepedia tool, decorated with the `MCPServerTool` attribute:
 
     ```cs
-    private readonly static HttpClient _httpClient = new();
-
     [McpServerTool(Name = "WookiepediaTool"),
      Description("A tool for getting information on Star Wars from Wookiepedia. " +
                  "This tool takes a prompt as a query and returns a list of results from Wookiepedia.")]
     public static async Task<string> QueryTheWeb([Description("The query to search for information on Wookiepedia.")] string query)
     {
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_toolsOptions.TavilyApiKey}");
-
         var requestBody = new
         {
             query,

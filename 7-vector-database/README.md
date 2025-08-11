@@ -200,9 +200,9 @@ You will be using Pinecone to store and index the scripts for some of the Star W
 
 You now have index data ready to search against. Now you can add a tool to the MCP server to search this vector database.
 
-### Configure the MPC server
+### Configure the MCP server
 
-Open the `StarWarsMCPServer` project.
+1. Open the `StarWarsMCPServer` project.
 
 1. Add a new entry to the `appsettings.json` file for the Pinecone API key:
 
@@ -423,4 +423,4 @@ StarWarsMCPServer sending method 'tools/call' request. Request: '{"method":"tool
 
 In this part you learned about vector databases, and used these for RAG.
 
-In the [next part](../8-agents/README.md) you will learn about agents, and create an agent to research and create images and stories.
+In the [next part](../8-multimodal/README.md) you will learn about using multimodal AI, and add a tool that uses AI to generate images from a text prompt.

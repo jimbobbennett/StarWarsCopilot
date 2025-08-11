@@ -11,7 +11,7 @@ In this section you will scaffold a new C# project using `Microsoft.Extensions.A
 
 ### Create the project
 
-1. Create a new folder for your project. Open this folder in your IDE.
+1. Create a new folder for your project called `StarWarsCopilot`. Open this folder in your IDE.
 
 1. Inside this new folder, create a new .NET console project:
 
@@ -54,9 +54,9 @@ Your instructor will provide a temporary endpoint and API key for you to use dur
 
     ```xml
     <ItemGroup>
-        <None Update="appsettings.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
     ```
 

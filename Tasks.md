@@ -1,10 +1,10 @@
 # ToDo
 
-- [ ] - Vector databases
-- [ ] - Agents
-- [ ] - Semantic Kernel
+- [x] - Vector databases
+- [x] - Multimodal
+- [x] - Agents/Semantic Kernel
 - [ ] - Slides (slidev/reveal etc.)
-- [ ] - Send requirements to KCDC
+- [x] - Send requirements to KCDC
 - [ ] - Rename all Async functions to Async
 - [ ] - Create before and after code for each section
 - [ ] - Finish README

@@ -309,6 +309,20 @@ Assistant > Purchased in order 66, a figurine of Emperor Palpatine was. The cust
 
 The Copilot now knows about purchases of Star Wars figurines, and when you ask a relevant question it is able to augment the generated results with real world data retrieved from the MCP server.
 
+> When this does a look up on the database, it will be case sensitive, so ensure you use the right case when asking for details about purchases. For example, asking with figurines **Ben Smith** purchased would work, but **Ben smith** (lower case S on Smith) will fail.
+>
+> The customers are:
+> Luke Johnson
+> Leia Parker"
+> Han Richards
+> Ben Smith
+> Yoda Masterson
+> Rey Fisher
+> Anakin Skywalker
+> Padmé Amidala
+> Lando Calrissian
+> Obi Wan
+
 ## Summary
 
 In this part you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
