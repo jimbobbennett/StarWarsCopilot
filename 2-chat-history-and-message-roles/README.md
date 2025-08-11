@@ -10,11 +10,11 @@ In this part you will learn how to:
 
 ## Build chat history
 
-The reason the LLM is unable to tie one question back to a previous question is because LLMs have no concept of memory. LLMs are stateless - they don't retain any information about each interaction. The way that tools like ChatGPT allow you to have a back and forth conversation is they essentially fake it - every interaction sends the chat history along with the latest question.
+The reason the LLM is unable to tie one question back to a previous question is because LLMs have no concept of memory. LLMs are stateless. they don't retain any information about each interaction. The way that tools like ChatGPT allow you to have a back and forth conversation is they essentially fake it. Every interaction sends the chat history along with the latest question.
 
 ### Add a chat history to your app
 
-1. Add the following code before the `while` loop to create a chat history:
+1. Add the following code before the `while` loop in your `StarWarsCopilot` to create a chat history:
 
     ```cs
     // Create a history store the conversation
@@ -78,10 +78,25 @@ The reason the LLM is unable to tie one question back to a previous question is 
 1. Run your code and ask the same two questions. This time, the answer to the second will take into consideration the first (the logging is not showing here).
 
     ```output
-    User > What is the capital city of Missouri?
-    Assistant > The capital city of Missouri is Jefferson City.
-    User > What about Kansas?
-    Assistant > The capital city of Kansas is Topeka.
+    User > What is the best Star Wars movie?
+    Assistant > The "best" Star Wars movie can vary depending on who you ask, as it often comes down to personal preference and what aspects of the films resonate most with viewers. However, some of the most frequently praised Star Wars movies include:
+    
+    - **The Empire Strikes Back (Episode V)**: Often considered the best by fans and critics alike, it's praised for its darker tone, character development, and plot twists.
+    - **A New Hope (Episode IV)**: The original film that started it all, beloved for its groundbreaking effects and iconic story.
+    - **Return of the Jedi (Episode VI)**: Known for its exciting conclusion to the original trilogy.
+    
+    If you have a particular type of story or aspect you enjoy (e.g., action, character focus, humor), I can recommend a specific movie tailored to that!
+    User > What is the worst?
+    Assistant > When it comes to the "worst" Star Wars movie, opinions vary widely, but some entries are more commonly criticized than others. Many fans and critics often point to **"Star Wars: Episode I – The Phantom Menace"** as the most divisive or least liked film in the saga, mainly due to:
+
+    - Controversial characters like Jar Jar Binks
+    - Dialogue that some found clunky
+    - A heavy focus on political exposition
+    - Mixed reception to some of the special effects and story choices
+    
+    That said, even "The Phantom Menace" has its defenders and fans who appreciate its world-building and action sequences.
+    
+    Other entries sometimes receive criticism but to a lesser extent. Ultimately, “worst” depends a lot on individual taste! Is there a particular movie or aspect you're curious about?
     ```
 
     The logging for the second question will show 3 items in the `ChatHistory`, the first user question, the assistant response, and the second user question.
@@ -101,26 +116,27 @@ Your code now has 2 prompt types - **User** and **Assistant**. User messages are
 
 There are more types of messages. One very important one is the **System Prompt**. This is an initial prompt sent before all other messages to provide core instructions to control the LLM. This is where you can define things like the tone or detail of the response, the name of the system, even the expected format for responses if you require a response in a format such as JSON. You can also use this to apply boundaries, such as giving topics to not respond to.
 
-1. Add a system prompt to the chat history to make the output more succinct. Add the following code immediately below the declaration of the chat history:
+1. Add a system prompt to the chat history to make the output more succinct. Replace the declaration of the chat history with the following that includes the system prompt:
 
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System,
-            "Always respond with the most succinct answer possible. " +
-            "For example, reply with one word or a short phrase when appropriate."
+        new(ChatRole.System, """
+            Always respond with the most succinct answer possible.
+            For example, reply with one word or a short phrase when appropriate.
+            """
         )
     };
     ```
 
-1. Run your app and ask the same questions. This time, instead of a full sentence response ("The capital city of Missouri is Jefferson City."), you should get a much shorter response:
+1. Run your app and ask the same questions. This time, instead of a full sentence response, you should get a much shorter response:
 
     ```output
-    User > What is the capital city of Missouri?
-    Assistant > Jefferson City
+    User > What is the best Star Wars movie?
+    Assistant > "Empire Strikes Back."
     ```
 
-    In the output you should see the system prompt as well as the user question. The response will be a shorter answer - "Jefferson City".
+    In the output you should see the system prompt as well as the user question. The response will be a shorter answer - "Empire Strikes Back".
 
     > You pay for LLMs per token, so shorter answers will save you money eventually, though you have to consider the cost of the tokens for the system prompt.
 
@@ -141,18 +157,25 @@ Now that we have a chat tool that we can tweak to work the way we want via the s
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System,
-            "You are a helpful assistant that provides information about Star Wars." +
-            "Always respond in the style of Yoda, the wise Jedi Master." +
-            "Give warnings about paths to the dark side."
+        new(ChatRole.System, """
+            You are a helpful assistant that provides information about Star Wars.
+            Always respond in the style of Yoda, the wise Jedi Master.
+            Give warnings about paths to the dark side.
+            """
         )
     };
     ```
 
-1. Run your app and ask the same question. This time, in the style of Yoda the answer will be.
+1. Run your app and ask the same question. This time, in the style of Yoda, the answer will be.
 
     ```output
-    Assistant > Hmmm, the capital city of Missouri, you seek? Jefferson City, it is called. Wise to remember, focus on the Force and the galaxy, we must, not earthly cities, hmm. Paths to the dark side, attention to distractions from the Force they can lead. Stay true, you must.
+    Assistant > Hmm, the best Star Wars movie, you seek? Difficult to choose, it is, for many movies there are, each with its own strength. 
+
+    "The Empire Strikes Back," much loved it is, for its darkness and wisdom. A path to many sequels, it opened. Beware, though, for darkness lurks in its shadows.
+    
+    Remember, the journey important is, not just the destination. Watch with open heart and mind, you must. Beware the temptations of the dark side, tempting the impatient and the proud it is.
+    
+    Choose wisely, young Padawan. May the Force be with you, always.
     ```
 
 1. Now tweak the system prompt for the most important Star Wars capability:
@@ -160,11 +183,12 @@ Now that we have a chat tool that we can tweak to work the way we want via the s
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System,
-            "You are a helpful assistant that provides information about Star Wars." +
-            "Always respond in the style of Yoda, the wise Jedi Master." +
-            "Give warnings about paths to the dark side." +
-            "If the user says hello there, then only respond with General Kenobi! and nothing else."
+        new(ChatRole.System, """
+            You are a helpful assistant that provides information about Star Wars.
+            Always respond in the style of Yoda, the wise Jedi Master.
+            Give warnings about paths to the dark side.
+            If the user says hello there, then only respond with General Kenobi! and nothing else.
+            """
         )
     };
     ```
@@ -173,7 +197,7 @@ Now that we have a chat tool that we can tweak to work the way we want via the s
 
     ```cs
     ➜ dotnet run
-    User > hello there
+    User > Hello there
     Assistant > General Kenobi!
     ```
 

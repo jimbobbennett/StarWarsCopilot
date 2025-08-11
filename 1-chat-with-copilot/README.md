@@ -19,7 +19,7 @@ In this section you will scaffold a new C# project using `Microsoft.Extensions.A
     dotnet new console
     ```
 
-1. Install the `Microsoft.Extensions.AI` nuget packages, as well as libraries for configuration, logging, and interacting with OpenAI on Azure:
+1. Install the `Microsoft.Extensions.AI` NuGet packages, as well as libraries for configuration, logging, and interacting with OpenAI on Azure:
 
     ```bash
     dotnet add package Azure.AI.OpenAI
@@ -147,7 +147,6 @@ The `Microsoft.Extensions.AI` library provides an `IChatClient` interface that y
     using Azure.AI.OpenAI;
     
     using Microsoft.Extensions.AI;
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
     ```
 
@@ -171,7 +170,7 @@ The `Microsoft.Extensions.AI` library provides an `IChatClient` interface that y
 
     This code creates an `AzureOpenAIClient`, then converts it to an `IChatClient`. More on this later.
 
-1. In the last step you created an inner client. To give more transparency on what is happening under the hood, you can wrap this inner client with logging:
+1. In the last step you created a client. To give more transparency on what is happening under the hood, you can wrap this client with logging:
 
     ```cs
     var chatClient = new ChatClientBuilder(innerClient)
@@ -223,11 +222,11 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
         C --> A
     ```
 
-1. Run the code to interact with the LLM. When prompted with `User >`, type your prompt and press return. You will see some logging messages, and the response from the LLM. Press return on an empty input to end the program.
+1. Run the code to interact with the LLM. When prompted with `User >`, type your prompt, such as "What is the best Star Wars movie?" and press return. You will see some logging messages, and the response from the LLM. Press return on an empty input to end the program.
 
     ```output
     ➜ dotnet run
-    User > hello
+    User > What is the best Star Wars movie?
     trce: Microsoft.Extensions.AI.LoggingChatClient[805843669]
           GetResponseAsync invoked: [
             {
@@ -235,7 +234,7 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
               "contents": [
                 {
                   "$type": "text",
-                  "text": "hello"
+                  "text": "What is the best Star Wars movie?"
                 }
               ]
             }
@@ -252,20 +251,20 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
                 "contents": [
                   {
                     "$type": "text",
-                    "text": "Hello! How can I assist you today?"
+                    "text": "The \"best\" Star Wars movie can vary depending on who you ask, as it often comes down to personal preference and what aspects of the films resonate most with viewers. However, some of the most frequently praised Star Wars movies include:\n\n- **The Empire Strikes Back (Episode V)**: Often considered the best by fans and critics alike, it's praised for its darker tone, character development, and plot twists.\n- **A New Hope (Episode IV)**: The original film that started it all, beloved for its groundbreaking effects and iconic story.\n- **Return of the Jedi (Episode VI)**: Known for its exciting conclusion to the original trilogy.\n\nIf you have a particular type of story or aspect you enjoy (e.g., action, character focus, humor), I can recommend a specific movie tailored to that!"
                   }
                 ],
-                "messageId": "chatcmpl-BsxsPWOfLbX6j1p89I0LwrnHOX1sh"
+                "messageId": "chatcmpl-C3DQsro7cWZlMj1UtydefjleyFc7c"
               }
             ],
-            "responseId": "chatcmpl-BsxsPWOfLbX6j1p89I0LwrnHOX1sh",
+            "responseId": "chatcmpl-C3DQsro7cWZlMj1UtydefjleyFc7c",
             "modelId": "gpt-4.1-mini-2025-04-14",
-            "createdAt": "2025-07-13T20:46:17+00:00",
+            "createdAt": "2025-08-11T03:24:14+00:00",
             "finishReason": "stop",
             "usage": {
-              "inputTokenCount": 8,
-              "outputTokenCount": 10,
-              "totalTokenCount": 18,
+              "inputTokenCount": 15,
+              "outputTokenCount": 165,
+              "totalTokenCount": 180,
               "additionalCounts": {
                 "InputTokenDetails.AudioTokenCount": 0,
                 "InputTokenDetails.CachedTokenCount": 0,
@@ -276,21 +275,27 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
               }
             }
           }.
-    Assistant > Hello! How can I assist you today?
+    Assistant > The "best" Star Wars movie can vary depending on who you ask, as it often comes down to personal preference and what aspects of the films resonate most with viewers. However, some of the most frequently praised Star Wars movies include:
+    
+    - **The Empire Strikes Back (Episode V)**: Often considered the best by fans and critics alike, it's praised for its darker tone, character development, and plot twists.
+    - **A New Hope (Episode IV)**: The original film that started it all, beloved for its groundbreaking effects and iconic story.
+    - **Return of the Jedi (Episode VI)**: Known for its exciting conclusion to the original trilogy.
+    
+    If you have a particular type of story or aspect you enjoy (e.g., action, character focus, humor), I can recommend a specific movie tailored to that!
     ```
 
     In the output you will also see logging information. This contains the prompt that was sent to the LLM, and the number of tokens used to send the prompt and get a response. Tokens are the representation that LLMs use - they don't work with text, instead they convert text to a numerical representation. Each token has a numerical value and represents either part of or a whole word.
 
-1. Ask a question, then ask a follow up question that relies on knowledge of the first question. For example, ask "What is the capital city of Missouri?", then ask "What about Kansas?". The response from the second question will be something like:
+1. Ask a question, then ask a follow up question that relies on knowledge of the first question. For example, ask "What is the best Star Wars movie?", then ask "What is the worst?". The response from the second question will be something like:
 
     ```output
-    Assistant > Could you please clarify what specific information you're interested in about Kansas? For example, are you looking for information on its geography, history, demographics, attractions, economy, or something else? That way, I can provide the most relevant details for you.
+    Assistant > Could you please clarify what you mean by "the worst"? Are you referring to the worst in a specific category, such as the worst movie, worst weather, worst experience, or something else? Providing more details will help me give a better answer.
     ```
 
-    You will notice that the response isn't what you would expect - you would expect the second question "What about Kansas?" to refer to the previous question, and the LLM would reply by giving the capital city of Kansas.
+    You will notice that the response isn't what you would expect - you would expect the second question "What is the worst?" to refer to the previous question and ask about the worst Star War movie, and the LLM would reply by saying "The Phantom Menace".
 
 ## Summary
 
 In this part you created a new C# project using `Microsoft.Extensions.AI`, and connected it to an Azure OpenAI service LLM. You then ran your app and were able to send messages to the LLM and get responses.
 
-Why didn't the LLM link the second question to the first? ChatGPT does this all the time? The answer is in chat history, and message roles and is covered in the [next part](../2-chat-history-and-message-roles/README.md).
+Why didn't the LLM link the second question to the first? ChatGPT does this all the time. The answer is in chat history, and message roles and is covered in the [next part](../2-chat-history-and-message-roles/README.md).

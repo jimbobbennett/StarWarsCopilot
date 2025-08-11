@@ -13,7 +13,7 @@ In the previous part you connected to an OpenAI model running on Azure AI Foundr
 
 There are many different APIs for interacting with LLMs, depending on the platform. These are basically the same style of API - you connect to an LLM and send a chat history, but they are all subtly different, requiring different APIs and SDKs.
 
-This means that if you want to try different LLMs you have to constantly tweak your code to use the different SDKs. Microsoft has a workaround - `Microsoft.Extensions.AI`. This is a nuget package that has a abstraction for LLM interactions, and implementations for different SDKs allowing you to use the same interface.
+This means that if you want to try different LLMs you have to constantly tweak your code to use the different SDKs. Microsoft has a workaround - `Microsoft.Extensions.AI`. This is a NuGet package that has a abstraction for LLM interactions, and implementations for different SDKs allowing you to use the same interface.
 
 When you created the chat client you called `AsIChatClient` to convert to an `IChatClient`, the LLM chat client interface from `Microsoft.Extensions.AI`. Your chat history is a list of `ChatMessage`, the abstraction for chat messages.
 
@@ -25,7 +25,7 @@ When you are using models deployed to Azure, they mostly use one of 2 SDKs - the
 
 Let's try our copilot using a DeepSeek model
 
-1. Change the `ModelId`, `Endpoint`, and `ApiKey` values in your `appsettings.json` to the values provided by your instructor.
+1. Change the `ModelId` and `Endpoint` values in your `appsettings.json` to the values provided by your instructor.
 
 1. Install the `Microsoft.Extensions.AI` Azure AI Inference implementation:
 
@@ -49,9 +49,20 @@ Let's try our copilot using a DeepSeek model
 
 Your app will work as before. This shows the advantage of using `Microsoft.Extensions.AI` - you can swap out the LLM to any compatible SDK and everything else in your app will just work.
 
+Each model is different, and you can see this when you use the DeepSeek model. This model outputs its 'thinking' when it send a response. You will see this in the output in the `<think></think>` tags:
+
+```output
+User > hello there
+Assistant > <think>
+We are given a specific instruction: if the user says "hello there", then respond only with "General Kenobi!" and nothing else.
+ The user has said "hello there", so we must follow that instruction.
+</think>
+General Kenobi!
+```
+
 ## Foundry Local
 
-> You will need a reasonably powerful machine to run this section. Any Apple Silicon Mac will be fine, as will any Windows device with a modern NVIDIA or ARM GPU. Check out the [Foundry Local prerequisites](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-local/get-started#prerequisites) for more details on support.
+> You will need a reasonably powerful macOS or Windows machine to run this section. Linux is currently not supported. Any Apple Silicon Mac will be fine, as will any Windows device with a modern NVIDIA or ARM GPU. Check out the [Foundry Local prerequisites](https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started#prerequisites) for more details on support.
 
 So far you have run your copilot using models deployed to the cloud, running on racks in datacenters full of GPUs. Whilst this allows you to take advantage of the power of the cloud, it is not very good for the planet, eating a lot of power and cooling, and pretty terrible if you are flying through hyperspace and your astromech can't connect to the internet.
 
@@ -72,7 +83,7 @@ Foundry Local is a tool for running AI models locally, taking advantage of your 
 1. Test the local model:
 
     ```bash
-    ➜ foundry model run phi-4-mini
+    foundry model run phi-4-mini
     ``
 
     This will start a simple chatbot, so ask the LLM a question to make sure it is running.
@@ -95,14 +106,14 @@ Foundry Local is a tool for running AI models locally, taking advantage of your 
 
 You can interact with models on Foundry Local using the OpenAI SDK.
 
-1. Install the Foundry Local and OpenAI nuget packages:
+1. Install the Foundry Local and OpenAI NuGet packages:
 
     ```bash
     dotnet add package Microsoft.AI.Foundry.Local --prerelease
     dotnet add package OpenAI
     ```
 
-1. Update the `ModelId` in your `appsettings.json` file to be `phi-4-mini`.
+1. Update the `ModelId` in your `appsettings.json` file to be `phi-4-mini`. The endpoint and API Key values won't be used here.
 
 1. Add using directives for Foundry Local and the OpenAI SDK to the top of your `Program.cs`:
 
@@ -118,7 +129,7 @@ You can interact with models on Foundry Local using the OpenAI SDK.
     var manager = await FoundryLocalManager.StartModelAsync(llmOptions.ModelId);
     ```
 
-1. Add this code to create the OpenAI client:
+1. Add this code to create the OpenAI client. You can access models running through Foundry Local using the OpenAI API. The endpoint and API key come from the `FoundryLocalManager`.
 
     ```cs
     var model = await manager.GetModelInfoAsync(llmOptions.ModelId);

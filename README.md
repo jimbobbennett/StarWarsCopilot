@@ -21,7 +21,7 @@ To complete this workshop you will need:
 This repo has the following structure:
 
 - README.md - this file with initial instructions
-- 9 lessons in folders numbered 1-9 with before and after code. Each lesson builds on the previous one.
+- 9 lessons in folders numbered 1-9 with the final code from the lesson. Each lesson builds on the previous one.
 
 ## Lessons
 
@@ -34,3 +34,5 @@ This repo has the following structure:
 1. [Vector databases](./7-vector-database/README.md)
 1. [Multimodal AI](./8-multimodal/README.md)
 1. [Agents](./9-agents/)
+
+Each lesson has an after folder containing all the code from the lesson. If you need to, start by using the after code from the previous lesson and build upon it.

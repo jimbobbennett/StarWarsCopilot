@@ -71,7 +71,7 @@ There is an official C# MCP SDK supported by Microsoft that allows you to create
     dotnet new console
     ```
 
-1. Add nuget packages to read configuration, and the C# MCP SDK:
+1. Add NuGet packages to read configuration, and the C# MCP SDK:
 
     ```bash
     dotnet add package Microsoft.Extensions.Hosting

@@ -53,9 +53,9 @@ Different LLMs have different capabilities when it comes to calling tools, so fo
 
 1. Revert your `appsettings.json` to use the OpenAI model
 
-1. Comment out the code to initialize Foundry Local and create a client using the Foundry Local model
-
 1. Uncomment the code to use the `AzureOpenAIClient`
+
+1. Delete the code to initialize Foundry Local and create a client using the Foundry Local model, as well as the commented out code to use the `Azure.AI.Inference.ChatCompletionsClient`
 
 1. The GPT-41-mini model used here also doesn't know about Kay Vess. Try asking to see this:
 
@@ -186,10 +186,12 @@ It will send the query `"Who is Kay Vess"`, searching just Wookiepedia at `https
 
 The tool needs to receive a query that it can pass to the API, and then return the results.
 
-The `Microsoft.Extensions.AI` library has a base class for tools, `AIFunction`. Any class derived from this can be passed to an LLM and called as a tool. These tools need to:
+The `Microsoft.Extensions.AI` library has a base class for tools, `AIFunction`. Any class derived from this can be passed to an LLM and called as a tool.
+
+These tools need to:
 
 - Describe what they do in natural language, so the LLM can decide to use the tool if necessary
-- Define their expected input as JSON so the LLM knows what to pass
+- Define their expected input as JSON so the LLM knows what to pass to the tool
 - Define the output so the LLM knows how to parse the response
 
 1. Create a new class called `WookiepediaTool` derived from `AIFunction` in a new file called `WookiepediaTool.cs`
@@ -216,8 +218,7 @@ The `Microsoft.Extensions.AI` library has a base class for tools, `AIFunction`. 
 
     ```cs
     public override string Description =>
-        "A tool for getting information on Star Wars from Wookiepedia. " +
-        "This tool takes a prompt as a query and returns a list of results from Wookiepedia.";
+        "A tool for getting information on Star Wars from Wookiepedia. This tool takes a prompt as a query and returns a list of results from Wookiepedia.";
     ```
 
 1. The LLM needs to know the input to this tool. This is defined as a JSON schema, and is passed to the LLM by the tool setup. Override the `JsonSchema` property:
@@ -323,7 +324,7 @@ Now the tool is ready, it can be used in our app.
     ChatOptions options = new() { Tools = tools };
     ```
 
-1. Add these options to the LLM call by passing them to `GetResponseAsync`:
+1. Add these options to the LLM call by passing them to `GetResponseAsync` inside the while loop:
 
     ```cs
     var result = await chatClient.GetResponseAsync(history, options);
@@ -334,12 +335,13 @@ Now the tool is ready, it can be used in our app.
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System,
-            "You are a helpful assistant that provides information about Star Wars." +
-            "Always respond in the style of Yoda, the wise Jedi Master." +
-            "Give warnings about paths to the dark side." +
-            "If the user says hello there, then only respond with General Kenobi! and nothing else." +
-            "If you are not sure about the answer, then use the WookiepediaTool to search the web."       // Add this line to encourage the LLM to call the tool
+        new(ChatRole.System, """
+            You are a helpful assistant that provides information about Star Wars.
+            Always respond in the style of Yoda, the wise Jedi Master.
+            Give warnings about paths to the dark side.
+            If the user says hello there, then only respond with General Kenobi! and nothing else.
+            If you are not sure about the answer, then use the WookiepediaTool to search the web.
+            """
         )
     };
     ```

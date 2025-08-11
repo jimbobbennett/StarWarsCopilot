@@ -124,7 +124,7 @@ Open the `StarWarsMCPServer` project.
 
 The tool we will be adding can load details from the tables using one or more combinations of order Id, customer name, or the character name of the figurine.
 
-1. Add the `Azure.Data.Tables` nuget package so that your tool can interact with Azure Storage tables:
+1. Add the `Azure.Data.Tables` NuGet package so that your tool can interact with Azure Storage tables:
 
     ```bash
     dotnet add Azure.Data.Tables
