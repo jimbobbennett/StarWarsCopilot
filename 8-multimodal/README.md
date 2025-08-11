@@ -23,7 +23,9 @@ There are many advanced models that can handle multiple modalities at once, mixi
 
 In this workshop, you are going to use a simple text to image model to generate Star Wars images. This can then be used to generate images based on the figurines our customers have purchased, or details from Wookiepedia, or the movie scripts in our vector database.
 
-This will be created as another tool. There's no reason at all a tool can't call use AI, so you can have a copilot that uses an AI that calls a tool, that calls another AI. That other AI could also call tools and so on. You can think of the MCP server as any black-box API. It exposes an interface for you to call (or more correctly for the AI to call), and the implementation is hidden from you, and can be composed of traditional code, or AI.
+This will be created as another tool. There's no reason at all a tool can't call use AI, so you can have a copilot that uses an AI that calls a tool, that calls another AI. That other AI could also call tools and so on.
+
+You can think of the MCP server as any black-box API. It exposes an interface for you to call (or more correctly for the AI to call), and the implementation is hidden from you, and can be composed of traditional code, or AI.
 
 ### Configure the MCP server
 
@@ -82,6 +84,7 @@ First you need to configure the MCP server to connect to the image generation mo
 1. Add a using directive for this package to the top of the `StarWarsTools` class:
 
     ```cs
+    using System.ClientModel;
     using Azure.AI.OpenAI;
     using OpenAI.Images;
     ```
@@ -222,11 +225,13 @@ Another way to help ensure we always get an image is to use AI to tweak the prom
         {
             return JsonSerializer.Serialize(new
             {
-                error = "A content error occurred while generating the image." + 
-                        "Please retry this tool with an adjusted prompt, such as changing named characters to very detailed " +
-                        "descriptions of the characters. Include details like race, gender, age, dress style, distinguishing features" +
-                        "(e.g., 'an old, small, green Jedi Master with pointy ears, a tuft of white hair and wrinkles' instead of 'Yoda')." +
-                        "If the description contains anything sexual or violent, replace with a more PG version of the description."
+                error = """
+                A content error occurred while generating the image.
+                Please retry this tool with an adjusted prompt, such as changing named characters to very detailed
+                descriptions of the characters. Include details like race, gender, age, dress style, distinguishing features
+                (e.g., 'an old, small, green Jedi Master with pointy ears, a tuft of white hair and wrinkles' instead of 'Yoda').
+                If the description contains anything sexual or violent, replace with a more PG version of the description.
+                """
             });
         }
         
@@ -243,20 +248,21 @@ Another way to help ensure we always get an image is to use AI to tweak the prom
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System,
-            "You are a helpful assistant that provides information about Star Wars." +
-            "Always respond in the style of Yoda, the wise Jedi Master." +
-            "Give warnings about paths to the dark side." +
-            "If the user says hello there, then only respond with General Kenobi! and nothing else." +
-            "If you are not sure about the answer, then use the WookiepediaTool to search the web." +
-            "If a tool responds asking you to call it again, follow the instructions and make the call again."
+        new(ChatRole.System, """
+            You are a helpful assistant that provides information about Star Wars.
+            Always respond in the style of Yoda, the wise Jedi Master.
+            Give warnings about paths to the dark side.
+            If the user says hello there, then only respond with General Kenobi! and nothing else.
+            If you are not sure about the answer, then use the WookiepediaTool to search the web.
+            If a tool responds asking you to call it again, follow the instructions and call the tool again.
+            """
         )
     };
     ```
 
     The added last line helps encourage the AI to call the tool again if needed.
 
-1. Run the copilot and generate an image of Lando at the disco:
+1. Restart the copilot and generate an image of Lando at the disco:
 
     ```output
     User > Generate an image of Lando Calrissian dancing at a disco
