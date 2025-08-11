@@ -21,4 +21,16 @@ To complete this workshop you will need:
 This repo has the following structure:
 
 - README.md - this file with initial instructions
-- 
+- 9 lessons in folders numbered 1-9 with before and after code. Each lesson builds on the previous one.
+
+## Lessons
+
+1. [Chat With an LLM](./1-chat-with-copilot/README.md)
+1. [Chat History and Message Roles](./2-chat-history-and-message-roles/README.md)
+1. [LLM Choice](./3-llm-choice/README.md)
+1. [Tool calling](./4-call-tools/README.md)
+1. [MCP - Model Context Protocol](./5-mcp/README.md)
+1. [RAG](./6-rag/README.md)
+1. [Vector databases](./7-vector-database/README.md)
+1. [Multimodal AI](./8-multimodal/README.md)
+1. [Agents](./9-agents/)
