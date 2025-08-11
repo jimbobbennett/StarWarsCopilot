@@ -9,7 +9,7 @@ In this you will learn:
 
 ## What is  Retrieval-Augmented generation (RAG)?
 
- Retrieval-Augmented generation (or RAG), is the process of augmenting the generation of text from an LLM using data retrieved from somewhere. You combine traditional information retrieval services with generative AI.
+Retrieval-Augmented generation (or RAG), is the process of augmenting the generation of text from an LLM using data retrieved from somewhere. You combine traditional information retrieval services with generative AI.
 
 You've actually implemented RAG already - the tool you created retrieved data from Wookiepedia and used it to augment the generated results from the LLM. RAG is more than just internet search, it can involve retrieving data from any source including databases, document stores, APIs, and more.
 
@@ -21,7 +21,7 @@ Some use cases for RAG are:
 
 ## Create a RAG tool for accessing a database
 
-Let's create a RAG tool in our Star Wars MCP server that can retrieve details about purchases of Star Wars figurines. You'll be querying a database in Azure Storage, and your instructor has created this for you already.
+Let's create a RAG tool in our Star Wars MCP server that can retrieve details about purchases of Star Wars figurines. You'll be querying a database in Azure Storage, and your instructor has created this for you already and populated it with data.
 
 <details>
 <summary>Create your own Azure storage</summary>
@@ -127,7 +127,7 @@ The tool we will be adding can load details from the tables using one or more co
 1. Add the `Azure.Data.Tables` NuGet package so that your tool can interact with Azure Storage tables:
 
     ```bash
-    dotnet add Azure.Data.Tables
+    dotnet add package Azure.Data.Tables
     ```
 
 1. Add a using directive for this package to the top of the `StarWarsTools` class:
@@ -182,6 +182,8 @@ The tool we will be adding can load details from the tables using one or more co
         return figurines.ToDictionary(f => f.RowKey);
     }
     ```
+
+    These helper functions get orders or figurines from the Azure Storage tables.
 
 1. Add the following MCP server tool function to the `StarWarsTools` class:
 
@@ -298,7 +300,7 @@ The tool we will be adding can load details from the tables using one or more co
 
 ## Use the new tool
 
-We've added the new tool to the MCP server. The MCP client in the copilot queries the MCP server and gets all the tools, so there is nothing we need to do to configure this new tool in the copilot, it just works!
+We've added the new tool to the MCP server. The MCP client in the copilot queries the MCP server and gets all the tools, so there is nothing we need to do to configure this new tool in the copilot, it just works! When the copilot is restarted, it will read the tools and discover the new one. This is one of the powerful features of MCP.
 
 To try this out, relaunch the copilot and ask questions about orders:
 
@@ -309,7 +311,7 @@ Assistant > Purchased in order 66, a figurine of Emperor Palpatine was. The cust
 
 The Copilot now knows about purchases of Star Wars figurines, and when you ask a relevant question it is able to augment the generated results with real world data retrieved from the MCP server.
 
-> When this does a look up on the database, it will be case sensitive, so ensure you use the right case when asking for details about purchases. For example, asking with figurines **Ben Smith** purchased would work, but **Ben smith** (lower case S on Smith) will fail.
+> When this does a look up on the database, it will be case sensitive, so ensure you use the right case when asking for details about purchases. For example, asking which figurines **Ben Smith** purchased would work, but **Ben smith** (lower case S on Smith) will fail.
 >
 > The customers are:
 > Luke Johnson
