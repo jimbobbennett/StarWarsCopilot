@@ -12,13 +12,13 @@ In this you will learn:
 
 In the previous part you defined a tool using code that the LLM could call. You were writing code to wrap an API in the format needed by `Microsoft.Extensions.AI` so that the LLM could call the tool. If we want to add more tools, we have to keep writing code to wrap different APIs or to call different services.
 
-This becomes a lot of work if we have a lot of tools. There's also different ways to call tools for different LLMs. If we have to write code, then it becomes hard to register new tools at run time.
+This becomes a lot of work if we have a lot of tools. Different LLMs also have different ways to call tools. If we have to write code for each tool, then it becomes hard to register new tools at run time.
 
-[**MCP**, or **Model Context Protocol**](https://modelcontextprotocol.io/introduction) is designed to solve this - it is a protocol to define a tool you can either call by running a separate process, or by calling a well-defined API. This way you once you have the ability to call MCP tools in your app, you can add new tools at run time, deploy new versions of tools without changing your app, and interact with off-the-shelf tools.
+[**MCP**, or **Model Context Protocol**](https://modelcontextprotocol.io/introduction) is designed to solve this - it is a protocol to define a server that has tools, that you can either call by running a separate process and interacting over stdio, or by calling a well-defined streaming HTTP API. This way you once you have the ability to call MCP tools in your app, you can add new tools at run time, deploy new versions of tools without changing your app, and interact with off-the-shelf tools.
 
 MCP has 3 parts - servers, a client, and a host.
 
-- A **Server** is an application that provides tools. This can run locally, or be accessed over a network connection, running on your network, or in the cloud.
+- A **Server** is an application that provides tools. This can run locally, or be accessed over a network connection, running on your network, or in the cloud. It can provide a list of the tools available, provide access to each tool, and send updates when tools change.
 - The **client** is a component of AI app. This registers one or more servers that it can call into.
 - The **host** is the application that the client runs in.
 
@@ -63,11 +63,11 @@ There is an official C# MCP SDK supported by Microsoft that allows you to create
 
 ### Create the project
 
-1. Create a new folder called `StarWarsMCPServer`, then in that folder create a new .NET console project.
+1. Create a new folder called `StarWarsMCPServer` and open it in your IDE.
+
+1. Create a new .NET console project.
 
     ```bash
-    mkdir StarWarsMCPServer
-    cd StarWarsMCPServer
     dotnet new console
     ```
 
@@ -81,14 +81,14 @@ There is an official C# MCP SDK supported by Microsoft that allows you to create
 
 1. Copy the `appsettings.json` and `ToolsOptions.cs` files from your Star Wars Copilot project into this folder - we can re-use these files to load the Tavily API key. You can remove the `LLM` section from the `appsettings.json` files.
 
-1. Add the following code to the `StarWarsMCPServer.csproj` file inside the `Project` section to ensure the app settings are loaded.
+1. Add the following code to the `StarWarsMCPServer.csproj` file inside the `Project` section to ensure the app settings are copied to the output directory.
 
     ```xml
-      <ItemGroup>
-        <None Update="appsettings.json">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </None>
-      </ItemGroup>
+    <ItemGroup>
+      <None Update="appsettings.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
     ```
 
 1. Change the namespace in the `ToolsOptions.cs` file to match the new project:
@@ -147,6 +147,8 @@ We have our server, now we need to add a new tool.
     
     using Microsoft.Extensions.Configuration;
     using ModelContextProtocol.Server;
+
+    using StarWarsMCPServer;
     
     [McpServerToolType]
     public static class StarWarsTools
@@ -156,7 +158,7 @@ We have our server, now we need to add a new tool.
 
     The `McpServerToolType` tells the MCP server that this class contains tools it can use. This is scanned by the `WithToolsFromAssembly` call on the `builder`.
 
-1. Add a static constructor to load the options for the tool to get the API key. This loads the configuration, then sets the Tavily API key as a header on the HTTP client:
+1. Add fields for an HTTP client and the tool options, and a static constructor to load the options for the tool to get the API key. This loads the configuration, then sets the Tavily API key as a header on the HTTP client:
 
     ```cs
     private readonly static ToolsOptions _toolsOptions = new();
@@ -214,9 +216,11 @@ We have our server, now we need to add a new tool.
 
     The `query` parameter is exposed to the MCP client, so that it knows it needs to pass a query to this call. This is also decorated with the same `Description` attribute to describe the parameter as before.
 
+What's nice here is that you don't need to define the JSON schema for the input and output, like you had to when you defined the tool in code in your copilot. The `Description` attribute on the tool and parameter define the input, and the LLM expects a string output that it will parse.
+
 ### Test your MCP server
 
-This is all the code you need for the MCP server, so let's test it using the MCP inspector. The MCP inspector is a tool that allows you to connect to MCP servers, inspect them, and call the tools.
+This is all the code you need for the MCP server, so let's test it using the MCP inspector. The MCP inspector is a tool from Anthropic that allows you to connect to MCP servers, inspect them, and call the tools.
 
 1. Run the following command to run the inspector:
 
@@ -228,7 +232,7 @@ This is all the code you need for the MCP server, so let's test it using the MCP
 
     When you run the command, the inspector will load in your default browser.
 
-1. Select the **Connect** button. This will run your project using the command you provided when you launched it (`dotnet run --project <path>/StarWarsMCPServer.csproj`), then connect over stdio.
+1. Select the **Connect** button. This will run your project using the command you provided when you launched it (`dotnet run --project <path>/StarWarsMCPServer.csproj`), then connect over stdio. This is one of the big advantages of using stdio transport, you don't have to host an API anywhere, the MCP client can launch a local process, including running a project with the dotnet cli, and connect to it.
 
     ![The connect button](./img/inspector-connect.webp)
 
@@ -242,7 +246,7 @@ This is all the code you need for the MCP server, so let's test it using the MCP
 
     ![Listing the tools](./img/list-tools.gif)
 
-1. Once the tools are listed, you can test out the _WookiepediaTool_. Select it, and the tool details will show on the pane next to the tools list, showing the description, as well as an input box for the `query`. Enter a query and select **Run Tool**.
+1. Once the tools are listed, you can test out the _WookiepediaTool_. Select it, and the tool details will show on the pane next to the tools list, showing the description, as well as an input box for the `query`. Enter a query, such as "Who is Kay Vess?" and select **Run Tool**.
 
     ![The result of asking the wookiepedia tool who is kay vess](./img/wookiepedia-tool-call.webp)
 
@@ -258,7 +262,7 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
     dotnet add package ModelContextProtocol --prerelease
     ```
 
-1. Comment out or delete the `WookiepediaTool` - you won't need this anymore as we are using the MCP server.
+1. Comment out or delete the `WookiepediaTool` and `ToolsOptions` - you won't need this anymore as we are using the MCP server. You can also delete the `Tools` section from the `appsettings.json`.
 
 ### Add configuration for the tool
 
@@ -267,7 +271,7 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
     ```json
     "MCPServers": {
         "Name": "StarWarsMCPServer",
-        "Command": "dotnet",,
+        "Command": "dotnet",
         "Arguments": [
             "run", 
             "--project",
