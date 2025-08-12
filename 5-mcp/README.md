@@ -14,7 +14,7 @@ In the previous part you defined a tool using code that the LLM could call. You 
 
 This becomes a lot of work if we have a lot of tools. Different LLMs also have different ways to call tools. If we have to write code for each tool, then it becomes hard to register new tools at run time.
 
-[**MCP**, or **Model Context Protocol**](https://modelcontextprotocol.io/introduction) is designed to solve this - it is a protocol to define a server that has tools, that you can either call by running a separate process and interacting over stdio, or by calling a well-defined streaming HTTP API. This way you once you have the ability to call MCP tools in your app, you can add new tools at run time, deploy new versions of tools without changing your app, and interact with off-the-shelf tools.
+[**MCP**, or **Model Context Protocol**](https://modelcontextprotocol.io/introduction) is designed to solve this - it is a protocol to define an external server that has tools, that you can either call by running a separate process and interacting over stdio, or by calling a well-defined streaming HTTP API. This way you once you have the ability to call MCP tools in your app, you can add new tools at run time, deploy new versions of tools without changing your app, and interact with off-the-shelf tools.
 
 MCP has 3 parts - servers, a client, and a host.
 
@@ -56,6 +56,8 @@ The power here is reusability - you can create an MCP server and call it from an
 ## Build an MCP server
 
 Our web search tool is working well for us, but would be better if we could move it out to an MCP server, then change our copilot to be an MCP client so we can add more MCP servers.
+
+MCP is designed to work with external tools, not functions inside your app. The advantage of moving tools out to an MCP server is it breaks down your app into components that can be reused, or updated independently.
 
 Lets build a Star Wars MCP server, with one tool for querying Wookiepedia.
 

@@ -108,9 +108,9 @@ Open the `StarWarsMCPServer` project.
     }
     ```
 
-    Your instructor can provide this key.
+    Your instructor can provide the connection string.
 
-1. Add a new property to the `ToolsOptions` class for this key:
+1. Add a new property to the `ToolsOptions` class for the connection string:
 
     ```cs
     /// <summary>
@@ -294,9 +294,24 @@ The tool we will be adding can load details from the tables using one or more co
 
     ![The inspector showing both tools](./img/all-tools.webp)
 
-    Try setting some values in the tool and running it. For example, search for order 66, or purchases by Ben Masterson.
+    Try setting some values in the tool and running it. For example, search for order 66, or purchases by Ben Smith.
 
     ![Order 66 showing a purchase of an Emperor Palpatine figurine](./img/order-66.webp)
+
+    > When this does a look up on the database, it will be case sensitive, so ensure you use the right case when asking for details about purchases. For example, asking which figurines **Ben Smith** purchased would work, but **Ben smith** (lower case S on Smith) will fail.
+    >
+    > The customers are:
+    >
+    > - Luke Johnson
+    > - Leia Parker
+    > - Han Richards
+    > - Ben Smith
+    > - Yoda Masterson
+    > - Rey Fisher
+    > - Anakin Skywalker
+    > - Padmé Amidala
+    > - Lando Calrissian
+    > - Obi Wan
 
 ## Use the new tool
 
@@ -310,20 +325,6 @@ Assistant > Purchased in order 66, a figurine of Emperor Palpatine was. The cust
 ```
 
 The Copilot now knows about purchases of Star Wars figurines, and when you ask a relevant question it is able to augment the generated results with real world data retrieved from the MCP server.
-
-> When this does a look up on the database, it will be case sensitive, so ensure you use the right case when asking for details about purchases. For example, asking which figurines **Ben Smith** purchased would work, but **Ben smith** (lower case S on Smith) will fail.
->
-> The customers are:
-> Luke Johnson
-> Leia Parker"
-> Han Richards
-> Ben Smith
-> Yoda Masterson
-> Rey Fisher
-> Anakin Skywalker
-> Padmé Amidala
-> Lando Calrissian
-> Obi Wan
 
 ## Summary
 

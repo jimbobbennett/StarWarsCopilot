@@ -16,6 +16,8 @@ To extend the power of an LLM, you can add **tool calling**, also known as funct
 
 Tools are code functions that describe what they do, the parameters they need, and the response they return in natural language, in a way that the LLM can process. You can then send a user prompt to the LLM along with tool calling information, and if the LLM needs to call the tool, it will return a response that lists the tool it needs to call and the parameters to pass. Your code then calls the tool, and send the tool response to the LLM to process to get a final response.
 
+The LLM itself cannot call the tool directly, it can only return a response saying it needs the tool to be called.
+
 ```mermaid
 flowchart TD
     S[System prompt] --> A[Prompt]
@@ -330,7 +332,7 @@ Now the tool is ready, it can be used in our app.
     var result = await chatClient.GetResponseAsync(history, options);
     ```
 
-1. LLMs are fickle beasts, and may not actually call your tool. You can encourage the LLM to use the tools by adjusting your system prompt:
+1. LLMs are fickle beasts, and may not actually decide to call your tool. You can encourage the LLM to use the tools by adjusting your system prompt:
 
     ```cs
     var history = new List<ChatMessage>
@@ -346,7 +348,7 @@ Now the tool is ready, it can be used in our app.
     };
     ```
 
-1. Now try the copilot, asking about Kay Vess again. This time the LLM will call the tool to get the response:
+1. Now try the copilot, asking about Kay Vess again. This time the LLM call will use the tool to get the response:
 
     ```output
     User > Who is Kay Vess?
@@ -354,6 +356,8 @@ Now the tool is ready, it can be used in our app.
     ```
 
     This time the answer is correct.
+
+The LLM is **not** calling your tool directly. Instead the SDK is managing the tool calling for you. It handles the response from the LLM, calls the tool, then passes the tool result back to the LLM.
 
 ## Chat results
 
