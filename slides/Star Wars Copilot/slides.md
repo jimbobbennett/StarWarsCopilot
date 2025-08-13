@@ -709,6 +709,6 @@ backgroundSize: 400px 400px
 
 # Please provide feedback
 
-You will let KCDC know that you loved this workshop
+This is the workshop you were looking for...
 
 ![](/obi-wan.jpg)
