@@ -2,7 +2,7 @@
 theme: seriph
 # random image from a curated Unsplash collection by Anthony
 # like them? see https://unsplash.com/collections/94734566/slidev
-background: wallpaper.jpg
+background: /wallpaper.jpg
 # some information about your slides (markdown enabled)
 title: Do you want to build a copilot?
 info: |
@@ -37,12 +37,12 @@ Welcome to this workshop!
 
 ---
 layout: image
-image: ./kcdc25_sponsorslide.jpeg
+image: /kcdc25_sponsorslide.jpeg
 ---
 
 ---
 layout: image
-image: hello-there.gif
+image: /hello-there.gif
 backgroundSize: contain
 ---
 
@@ -52,14 +52,14 @@ Hello there!
 
 ---
 layout: image-right
-image: jim.jpg
+image: /jim.jpg
 ---
 
 # Jim Bennett
 
 Principal Developer Advocate at Galileo
 
-![](./jimbobbennett-qr.png)
+![](/jimbobbennett-qr.png)
 
 <!--
 I'm Jim, been doing engineering for over a quarter of a century.
@@ -186,7 +186,7 @@ Copilots are different to chat tools
 
 ---
 layout: image-right
-image: r2d2.jpg
+image: /r2d2.jpg
 ---
 
 # What are we building today?
@@ -279,7 +279,7 @@ layout: center
 
 ---
 layout: image-right
-image: ./Yoda.webp
+image: /Yoda.webp
 ---
 
 # Review
@@ -390,7 +390,7 @@ layout: center
 
 ---
 layout: image-right
-image: ./Kay_Vess.webp
+image: /Kay_Vess.webp
 ---
 
 # Review
@@ -575,7 +575,7 @@ layout: center
 
 ---
 layout: image-right
-image: ./generated_c3po.webp
+image: /generated_c3po.webp
 ---
 
 # Review
@@ -687,14 +687,14 @@ In this workshop you:
 
 ---
 layout: image-right
-image: jim.jpg
+image: /jim.jpg
 ---
 
 # Jim Bennett
 
 Principal Developer Advocate at Galileo
 
-![](./jimbobbennett-qr.png)
+![](/jimbobbennett-qr.png)
 
 <!--
 I'm Jim, been doing engineering for over a quarter of a century.
@@ -703,7 +703,7 @@ You can find me all over the internet if you have questions about today
 
 ---
 layout: image-right
-image: ./2025_SessionFeedback.png
+image: /2025_SessionFeedback.png
 backgroundSize: 400px 400px
 ---
 
@@ -711,4 +711,4 @@ backgroundSize: 400px 400px
 
 You will let KCDC know that you loved this workshop
 
-![](./obi-wan.jpg)
+![](/obi-wan.jpg)
