@@ -1,55 +1,35 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.ClientModel;
-
+﻿using System.ClientModel;
 using Azure.AI.OpenAI;
+using Azure;
+using Azure.AI.Inference;
+
+using ChatRole = Microsoft.Extensions.AI.ChatRole;
 
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-
 using Microsoft.AI.Foundry.Local;
 using OpenAI;
 
 using StarWarsCopilot;
 
-// Build the configuration
-var configuration = new ConfigurationBuilder()
-    .SetBasePath(AppContext.BaseDirectory)
-    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-    .Build();
 
-// Get the LLM configuration
-var llmOptions = configuration.GetSection(LLMOptions.SectionName)
-                              .Get<LLMOptions>();
-
-if (llmOptions == null)
-{
-    throw new InvalidOperationException("LLM configuration is missing. Please check your appsettings.json file.");
-}
-
-// Validate required configuration
-if (string.IsNullOrEmpty(llmOptions.ModelId) ||
-    string.IsNullOrEmpty(llmOptions.Endpoint) ||
-    string.IsNullOrEmpty(llmOptions.ApiKey))
-{
-    throw new InvalidOperationException("LLM configuration is incomplete. ModelId, Endpoint, and ApiKey are required.");
-}
-
+// Create a logger factory
 var factory = LoggerFactory.Create(builder => builder.AddConsole()
                                                      .SetMinimumLevel(LogLevel.Trace));
 
-// var innerClient = new AzureOpenAIClient(new Uri(llmOptions.Endpoint),
-//                             new ApiKeyCredential(llmOptions.ApiKey))
-//                             .GetChatClient(llmOptions.ModelId)
-//                             .AsIChatClient();
 
-// var innerClient = new Azure.AI.Inference.ChatCompletionsClient(new Uri(llmOptions.Endpoint),
-//                                                                 new Azure.AzureKeyCredential(llmOptions.ApiKey))
-//                                                                 .AsIChatClient(llmOptions.ModelId);
+// var client = new AzureOpenAIClient(new Uri(LLMOptions.Endpoint),
+//                                    new ApiKeyCredential(LLMOptions.ApiKey));
+
+// var innerClient = client.GetChatClient(LLMOptions.Model).AsIChatClient();
+
+// var innerClient = new ChatCompletionsClient(new Uri(LLMOptions.AIInferenceEndpoint),
+//                                             new AzureKeyCredential(LLMOptions.ApiKey))
+//                                             .AsIChatClient(LLMOptions.AIInferenceModel);
 
 // Start the Foundry Local model
-var manager = await FoundryLocalManager.StartModelAsync(llmOptions.ModelId);
-
-var model = await manager.GetModelInfoAsync(llmOptions.ModelId);
+var manager = await FoundryLocalManager.StartModelAsync(LLMOptions.Model);
+var model = await manager.GetModelInfoAsync(LLMOptions.Model);
 var key = new ApiKeyCredential(manager.ApiKey);
 var openAIClient = new OpenAIClient(key, new OpenAIClientOptions
 {
@@ -60,8 +40,9 @@ var openAIClient = new OpenAIClient(key, new OpenAIClientOptions
 var innerClient = openAIClient.GetChatClient(model!.ModelId).AsIChatClient();
 
 var chatClient = new ChatClientBuilder(innerClient)
-                    .UseLogging(factory)
-                    .Build();
+                        .UseLogging(factory)
+                        .Build();
+
 
 // Create a history store the conversation
 var history = new List<ChatMessage>
@@ -91,6 +72,7 @@ while (true)
 
     // Get the response from the AI
     var result = await chatClient.GetResponseAsync(history);
+
 
     // Add the AI response to the chat history
     history.Add(new ChatMessage(ChatRole.Assistant, result.Messages.Last()?.Text ?? string.Empty));

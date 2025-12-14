@@ -21,24 +21,64 @@ By using these abstractions, any LLM provider can make their SDK available to de
 
 ## Azure AI Inference SDK
 
-When you are using models deployed to Azure, they mostly use one of 2 SDKs - the Azure OpenAI SDK, or the Azure AI Inference SDK. If you want to use models such as DeepSeek, or Phi-4, you need to connect to them using the Azure AI Inference SDK.
+When you are using models deployed to Azure, they mostly use one of 2 SDKs - the Azure OpenAI SDK, or the Azure AI Inference SDK. If you want to use models such as DeepSeek, or Phi-4, you can connect to them using the Azure AI Inference SDK.
 
-Let's try our copilot using a DeepSeek model
+Let's try our copilot using a DeepSeek model and the Azure AI Inference SDK
 
-1. Change the `ModelId` and `Endpoint` values in your `appsettings.json` to the values provided by your instructor.
-
-1. Install the `Microsoft.Extensions.AI` Azure AI Inference implementation:
+1. Set the AI inference model name and endpoint in your user secrets:
 
     ```bash
-    dotnet add package Microsoft.Extensions.AI.AzureAIInference --prerelease
+    dotnet user-secrets set "AIInference:Endpoint" "https://codemash.services.ai.azure.com/models"
+    dotnet user-secrets set "AIInference:ModelName" "DeepSeek-R1-0528"
     ```
 
-1. Comment out the declaration of the `innerClient`, and add this below it to use the Azure AI Inference SDK:
+1. Install the `Azure.AI.Inference` and `Microsoft.Extensions.AI` Azure AI Inference implementation packages:
+
+    ```bash
+    dotnet add package Azure.AI.Inference --version 1.0.0-beta.5
+    dotnet add package Microsoft.Extensions.AI.AzureAIInference --version 10.0.0-preview.1.25559.3
+    ```
+
+1. Add fields and properties for these new secrets to the `LLMOptions` class:
 
     ```cs
-    var innerClient = new Azure.AI.Inference.ChatCompletionsClient(new Uri(llmOptions.Endpoint),
-                                                                   new Azure.AzureKeyCredential(llmOptions.ApiKey))
-                                                                    .AsIChatClient(llmOptions.ModelId);
+    private static readonly string? _aiInferenceEndpoint;
+    private static readonly string? _aiInferenceModel;
+
+    public static string AIInferenceEndpoint => _aiInferenceEndpoint!;
+    public static string AIInferenceModel => _aiInferenceModel!;
+    ```
+
+1. In the `LLMOptions` constructor, load these values:
+
+    ```cs
+    if (!secretProvider.TryGet("AIInference:Endpoint", out _aiInferenceEndpoint))
+    {
+        throw new InvalidOperationException("AIInference:Endpoint is not configured in User Secrets.");
+    }
+    if (!secretProvider.TryGet("AIInference:ModelName", out _aiInferenceModel))
+    {
+        throw new InvalidOperationException("AIInference:ModelName is not configured in User Secrets.");
+    }
+    ```
+
+1. In your `Program.cs`, add the following using directives for the Azure AI Inference SDK:
+
+    ```cs
+    using Azure;
+    using Azure.AI.Inference;
+
+    using ChatRole = Microsoft.Extensions.AI.ChatRole;
+    ```
+
+    The last `using ChatRole = Microsoft.Extensions.AI.ChatRole;` is to avoid a conflict between `ChatRole` declared in the `Azure.AI.Inference` namespace and the one declared in the `Microsoft.Extensions.AI` namespace.
+
+1. Comment out the declaration of the `client` and `innerClient`, and add this below it to use the Azure AI Inference SDK:
+
+    ```cs
+    var innerClient = new ChatCompletionsClient(new Uri(LLMOptions.AIInferenceEndpoint),
+                                                new AzureKeyCredential(LLMOptions.ApiKey))
+                                                .AsIChatClient(LLMOptions.AIInferenceModel);
     ```
 
 1. Run your app
@@ -99,6 +139,7 @@ Foundry Local is a tool for running AI models locally, taking advantage of your 
     
     Interactive mode, please enter your prompt
     > Hello there
+    🧠 Thinking...
     🤖 Hello! How can I assist you today?
     ```
 
@@ -109,11 +150,15 @@ You can interact with models on Foundry Local using the OpenAI SDK.
 1. Install the Foundry Local and OpenAI NuGet packages:
 
     ```bash
-    dotnet add package Microsoft.AI.Foundry.Local --prerelease
-    dotnet add package OpenAI
+    dotnet add package Microsoft.AI.Foundry.Local --version 0.3.0
+    dotnet add package OpenAI --version 2.8.0
     ```
 
-1. Update the `ModelId` in your `appsettings.json` file to be `phi-4-mini`. The endpoint and API Key values won't be used here.
+1. Update the `OpenAI:ModelName` in your user secrets to be `phi-4-mini`. The endpoint and API Key values won't be used here.
+
+    ```bash
+    dotnet user-secrets set "OpenAI:ModelName" "phi-4-mini"
+    ```
 
 1. Add using directives for Foundry Local and the OpenAI SDK to the top of your `Program.cs`:
 

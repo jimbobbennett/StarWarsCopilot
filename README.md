@@ -10,7 +10,7 @@ To complete this workshop you will need:
 
 - A basic understanding of C#
 - A working C# development environment, with
-  - [.NET 9 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
+  - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
   - An IDE with C# such as [VS Code](http://code.visualstudio.com) with the [C# Dev Kit extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) installed, [Visual Studio](https://visualstudio.microsoft.com) with the .NET workload installed, or [JetBrains Rider](https://www.jetbrains.com/rider/)
 - [Node](https://nodejs.org/en/download) installed
 - Access to an LLM running on Azure OpenAI service, as well as the Azure AI Inference service (your instructor can provide this)
@@ -28,6 +28,10 @@ This repo has the following structure:
 1. [Chat With an LLM](./1-chat-with-copilot/README.md)
 1. [Chat History and Message Roles](./2-chat-history-and-message-roles/README.md)
 1. [LLM Choice](./3-llm-choice/README.md)
+
+
+
+
 1. [Tool calling](./4-call-tools/README.md)
 1. [MCP - Model Context Protocol](./5-mcp/README.md)
 1. [RAG](./6-rag/README.md)
