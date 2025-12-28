@@ -32,7 +32,7 @@ In this section you will scaffold a new C# project using `Microsoft.Extensions.A
 
 ### Configure your secrets
 
-The next step is to configure some secrets to store the connection details for the LLM you will be using. Your instructor can provide these details, including an endpoiny, an API key, and a model name.
+The next step is to configure some secrets to store the connection details for the LLM you will be using. Your instructor can provide these details, including an endpoint, an API key, and a model name.
 
 1. Initialize the .NET secrets manager
 

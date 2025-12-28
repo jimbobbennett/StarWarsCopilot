@@ -1,17 +1,21 @@
-using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Configuration;
 
 namespace StarWarsCopilot;
 
-/// <summary>
-/// Configuration settings for the tools
-/// </summary>
-public class ToolsOptions
+public static class ToolsOptions
 {
-    public const string SectionName = "Tools";
+    private static readonly string? _tavilyApiKey;
 
-    /// <summary>
-    /// The API key for Tavily
-    /// </summary>
-    [Required]
-    public string TavilyApiKey { get; set; } = string.Empty;
+    static ToolsOptions()
+    {
+        var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
+
+        var secretProvider = config.Providers.First();
+        if (!secretProvider.TryGet("Tavily:ApiKey", out _tavilyApiKey))
+        {
+            throw new InvalidOperationException("Tavily:ApiKey is not configured in User Secrets.");
+        }
+    }
+
+    public static string TavilyApiKey => _tavilyApiKey!;
 }

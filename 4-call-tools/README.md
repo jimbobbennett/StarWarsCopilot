@@ -30,6 +30,8 @@ flowchart TD
     LTC --> R[Response]
 ```
 
+> There are LLM SDKs or AI frameworks that handle tool calling automatically, so they look like the LLM is calling the tool.
+
 A tool is ideally designed to do one task. For example, if you wanted to model basic CRUD, you would have four tools - one tool to create a new record, one to replace a record, one to update, and one to delete.
 
 ## Expand your LLMs knowledge with a web search tool
@@ -43,6 +45,24 @@ User > Who is Kay Vess?
 Assistant > Kay Vess, a Jedi Knight, is a fictional character from the Star Wars universe. He is known for his exceptional skills in the Force and his dedication to the Jedi Order. However, he ultimately chose to leave the Jedi Order and join the Sith, becoming a dark side user. His story serves as a cautionary tale about the dangers of succumbing to the dark side of the Force. Remember, the path to the dark side is treacherous and fraught with peril. May the Force be with you.
 ```
 
+Asking again might give:
+
+```output
+User > Who is Kay Vess?
+Assistant > Kay Vess is an award-winning contemporary classical violinist. Renowned for her remarkable violin technique, musicality, and lyrical expressiveness, she has appeared on numerous prestigious stages around the world. Vess initially gained widespread acclaim as a child prodigy, showcasing her extraordinary talents in various international competitions and concerts.
+
+One of the notable highlights of Kay Vess's career is her performance on Handel’s "Water Music," featuring the Orchestre de Lyon and the Metropolitan Opera under the baton of Marin Alsop in April 2004. As of my knowledge cutoff in 2021, Kay Vess continued to be an influential figure in the classical music world, presenting compositions from major and lesser-known composers alike.
+
+For the latest information on Kay Vess’s career, including any new recordings, performances, or projects, you may want to check recent sources or her official website.
+```
+
+One more time:
+
+```output
+User > Who is Kay Vess?
+Assistant > As of my last update in October 2023, there is no widely known prominent figure named Kay Vess. It's possible that Kay Vess could be a private individual, a niche public figure, or someone who has not been prominent in historical records up to that point. If you have more context or details about who Kay Vess is, I'd be happy to help you get more relevant information.
+```
+
 If you've played the game then you will know this is nonsense, hallucinated by the model.
 
 ![Kay vess, a human female with shoulder length brown hair and bangs, wearing a blue leather looking jacket and grey-green top](./img/Kay_Vess.webp)
@@ -53,68 +73,58 @@ To help our LLM have better knowledge, we can add a tool that can do a web searc
 
 Different LLMs have different capabilities when it comes to calling tools, so for the best response use the OpenAI model deployed to Azure AI Foundry. To do this:
 
-1. Revert your `appsettings.json` to use the OpenAI model
-
 1. Uncomment the code to use the `AzureOpenAIClient`
 
-1. Delete the code to initialize Foundry Local and create a client using the Foundry Local model, as well as the commented out code to use the `Azure.AI.Inference.ChatCompletionsClient`
+1. Delete or comment out the code to initialize Foundry Local and create a client using the Foundry Local model, as well as the commented out code to use the `Azure.AI.Inference.ChatCompletionsClient`
 
-1. The GPT-41-mini model used here also doesn't know about Kay Vess. Try asking to see this:
+1. Revert the model being used back to GPT-5 mini:
+
+    ```bash
+    dotnet user-secrets set "OpenAI:ModelName" "gpt-5-mini"
+    ```
+
+1. The GPT-5 mini model used here also doesn't know about Kay Vess. Try asking to see this:
 
     ```output
     User > Who is Kay Vess?
-    Assistant > Kay Vess, she is, a character from the galaxy far, far away. In the comics of Marvel's Star Wars series she appears, a skilled and brave individual. Her story, entwined with the Rebel Alliance it is, fighting against the tyranny of the Empire she does. Beware, young one, the paths of war and conflict, easy to fall to the dark side they are. Steady on the light side, one must remain. Hmmm.
+    Assistant > Hmm. Know Kay Vess well, I do not. A major figure in Star Wars canon she is not, as of my knowledge to June 2024. Minor appearances or references there may be — in High Republic tales or ancillary comics and novels, sometimes characters small but important are — but a definitive, widely recognized biography of Kay Vess in core canon, I cannot provide.
+
+    Seen the name where, have you? Tell me the book, comic, or show, and look into it I will. Caution I give you, yes: curious about power or secrets you may be — lead to the dark side obsession can, and into fear and anger. Careful be, you must.
     ```
 
 ### Add configuration
 
 Tavily is an API that needs a key. It has a generous free tier, or you can get an API key from your instructor.
 
-1. Add a new `Tools` section to the `appsettings.json` file to store the Tavily API key:
+1. Add a new user secret for the Tavily API key:
 
-    ```json,
-    {
-        "LLM": {
-            ...
-        },
-        "Tools": {
-            "TavilyApiKey": ""
-        }
-    }
+    ```bash
+    dotnet user-secrets set "Tavily:ApiKey" "..."
     ```
 
-1. Create a class to map these options. Create a new file called `ToolsOptions.cs` with the following code:
+1. Create a class to access options for tools. Create a new file called `ToolsOptions.cs` with the following code:
 
     ```cs
-    using System.ComponentModel.DataAnnotations;
-    
+    using Microsoft.Extensions.Configuration;
+
     namespace StarWarsCopilot;
     
-    /// <summary>
-    /// Configuration settings for the tools
-    /// </summary>
-    public class ToolsOptions
+    public static class ToolsOptions
     {
-        public const string SectionName = "Tools";
+        private static readonly string? _tavilyApiKey;
     
-        /// <summary>
-        /// The API key for Tavily
-        /// </summary>
-        [Required]
-        public string TavilyApiKey { get; set; } = string.Empty;
-    }
-    ```
-
-1. Load and validate this configuration in your `Program.cs` file, just below the code to load the LLM options:
-
-    ```cs
-    // Get the Tools configuration
-    var toolsOptions = configuration.GetSection(ToolsOptions.SectionName)
-                                    .Get<ToolsOptions>();
+        static ToolsOptions()
+        {
+            var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
     
-    if (toolsOptions == null)
-    {
-        throw new InvalidOperationException("Tools configuration is missing. Please check your appsettings.json file.");
+            var secretProvider = config.Providers.First();
+            if (!secretProvider.TryGet("Tavily:ApiKey", out _tavilyApiKey))
+            {
+                throw new InvalidOperationException("Tavily:ApiKey is not configured in User Secrets.");
+            }
+        }
+    
+        public static string TavilyApiKey => _tavilyApiKey!;
     }
     ```
 
@@ -322,7 +332,7 @@ Now the tool is ready, it can be used in our app.
 1. Immediately underneath this, define some chat options that include the new tool, creating it and setting the API key. You can register multiple tools with an LLM by passing an array of tools to the options. In this case, the array has just one entry.
 
     ```cs
-    IList<AITool> tools = [new WookiepediaTool(toolsOptions.TavilyApiKey)];
+    IList<AITool> tools = [new WookiepediaTool(ToolsOptions.TavilyApiKey)];
     ChatOptions options = new() { Tools = tools };
     ```
 
@@ -357,7 +367,9 @@ Now the tool is ready, it can be used in our app.
 
     This time the answer is correct.
 
-The LLM is **not** calling your tool directly. Instead the SDK is managing the tool calling for you. It handles the response from the LLM, calls the tool, then passes the tool result back to the LLM.
+The LLM is **not** calling your tool directly - it doesn't have access to your application or your code. This would be dangerous, if an LLM call could control your machine!
+
+Instead the SDK is managing the tool calling for you. It handles the response from the LLM that request a tool call, calls the tool, then passes the tool result back to the LLM.
 
 ## Chat results
 
@@ -371,7 +383,7 @@ var result = await chatClient.GetResponseAsync(history, options);
 history.Add(new ChatMessage(ChatRole.Assistant, result.Messages.Last()?.Text ?? string.Empty));
 ```
 
-So why is there a list? Well the list contains the details of all the messages used to get the response. When you called the LLM it doesn't magically call the tool and process the response, instead it is a back and forth conversation, that the chat client handles for you. The user message is sent to the LLM, the LLM then responds with an assistant message that requests a tool call, giving the name of the tool it wants to call, along with the input data in the right format. The chat client then calls the tool, and send a different type of message, a tool message, to the LLM with the results of the tool call. The LLM finally responds with the result.
+So why is there a list? Well the list contains the details of all the messages used to get the response. When you called the LLM it doesn't magically call the tool and process the response, instead it is a back and forth conversation, that the chat client from the SDK handles for you. The user message is sent to the LLM, the LLM then responds with an assistant message that requests a tool call, giving the name of the tool it wants to call, along with the input data in the right format. The chat client then calls the tool, and send a different type of message, a tool message, to the LLM with the results of the tool call. The LLM finally responds with the result.
 
 This means in the `result.Messages` collection there are 3 entries - an assistant message with tool call details, a tool message, and the final assistant message with the response.
 
