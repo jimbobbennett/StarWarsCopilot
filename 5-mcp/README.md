@@ -49,7 +49,7 @@ MCP was invented by Anthropic, the makers of Claude, in November 2024. As an ope
 
 MCP servers can contain multiple tools. Just like tools defined in your app in code, these tools have a natural language description for what they do, as well as a defined schema for the inputs they accept and the output they return. These inputs and outputs are again defined as a JSON schema.
 
-The power here is reusability - you can create an MCP server and call it from any MCP client, there's no need to build multiple versions of your tool in every application, or to confirm to different LLM SDKs.
+The power here is reusability - you can create an MCP server and call it from any MCP client, there's no need to build multiple versions of your tool in every application, or to conform to different LLM SDKs.
 
 > You may have heard of GitHub copilot extensions - this was a similar idea to standardize tools, but you could only use GitHub Copilot extensions from inside GitHub copilot. MCP allows you to call tools from any MCP client, including GitHub copilot.
 
@@ -57,7 +57,7 @@ The power here is reusability - you can create an MCP server and call it from an
 
 Our web search tool is working well for us, but would be better if we could move it out to an MCP server, then change our copilot to be an MCP client so we can add more MCP servers.
 
-MCP is designed to work with external tools, not functions inside your app. The advantage of moving tools out to an MCP server is it breaks down your app into components that can be reused, or updated independently.
+MCP is designed to work with external tools, not functions inside your app. The advantage of moving tools out to an MCP server is it breaks down your app into components that can be reused, or updated independently. Instead of having one app with built in tools, you can deploy a smaller app along with tools as separate MCP servers - kind of like deploying these servers as different microservices.
 
 Lets build a Star Wars MCP server, with one tool for querying Wookiepedia.
 
@@ -77,21 +77,22 @@ There is an official C# MCP SDK supported by Microsoft that allows you to create
 
     ```bash
     dotnet add package Microsoft.Extensions.Hosting
-    dotnet add package Microsoft.Extensions.Configuration.Json
     dotnet add package ModelContextProtocol --prerelease
     ```
 
-1. Copy the `appsettings.json` and `ToolsOptions.cs` files from your Star Wars Copilot project into this folder - we can re-use these files to load the Tavily API key. You can remove the `LLM` section from the `appsettings.json` files.
+1. Initialize the .NET secrets manager
 
-1. Add the following code to the `StarWarsMCPServer.csproj` file inside the `Project` section to ensure the app settings are copied to the output directory.
-
-    ```xml
-    <ItemGroup>
-      <None Update="appsettings.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
+    ```bash
+    dotnet user-secrets init
     ```
+
+1. Add a new user secret for the Tavily API key:
+
+    ```bash
+    dotnet user-secrets set "Tavily:ApiKey" "..."
+    ```
+
+1. Copy `ToolsOptions.cs` file from your Star Wars Copilot project into this folder - we can re-use this class to load the Tavily API key.
 
 1. Change the namespace in the `ToolsOptions.cs` file to match the new project:
 
@@ -147,10 +148,9 @@ We have our server, now we need to add a new tool.
     using System.ComponentModel;
     using System.Text.Json;
     
-    using Microsoft.Extensions.Configuration;
     using ModelContextProtocol.Server;
 
-    using StarWarsMCPServer;
+    namespace StarWarsMCPServer;
     
     [McpServerToolType]
     public static class StarWarsTools
@@ -160,31 +160,14 @@ We have our server, now we need to add a new tool.
 
     The `McpServerToolType` tells the MCP server that this class contains tools it can use. This is scanned by the `WithToolsFromAssembly` call on the `builder`.
 
-1. Add fields for an HTTP client and the tool options, and a static constructor to load the options for the tool to get the API key. This loads the configuration, then sets the Tavily API key as a header on the HTTP client:
+1. Add fields for an HTTP client, and a static constructor to load the options for the tool to get the API key. This loads the configuration, then sets the Tavily API key as a header on the HTTP client:
 
     ```cs
-    private readonly static ToolsOptions _toolsOptions = new();
-
     private readonly static HttpClient _httpClient = new();
 
     static StarWarsTools()
     {
-        // Build the configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
-        // Get the Tools configuration
-        _toolsOptions = configuration.GetSection(ToolsOptions.SectionName)
-                                     .Get<ToolsOptions>()!;
-
-        if (_toolsOptions == null)
-        {
-            throw new InvalidOperationException("Tools configuration is missing. Please check your appsettings.json file.");
-        }
-
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_toolsOptions.TavilyApiKey}");
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {ToolsOptions.TavilyApiKey}");
     }
     ```
 
@@ -230,9 +213,9 @@ This is all the code you need for the MCP server, so let's test it using the MCP
     npx @modelcontextprotocol/inspector dotnet run --project <path>/StarWarsMCPServer.csproj
     ```
 
-    Replace `<path>` with the path of your project. This will start the inspector and configure it to connect to your project.
+    Replace `<path>` with the path of your project. The first time you run this command, you will need to select `y` to proceed with installing the inspector Node package.
 
-    When you run the command, the inspector will load in your default browser.
+    This will start the inspector and configure it to connect to your project. The inspector will then load in your default browser.
 
 1. Select the **Connect** button. This will run your project using the command you provided when you launched it (`dotnet run --project <path>/StarWarsMCPServer.csproj`), then connect over stdio. This is one of the big advantages of using stdio transport, you don't have to host an API anywhere, the MCP client can launch a local process, including running a project with the dotnet cli, and connect to it.
 
@@ -252,6 +235,8 @@ This is all the code you need for the MCP server, so let's test it using the MCP
 
     ![The result of asking the wookiepedia tool who is kay vess](./img/wookiepedia-tool-call.webp)
 
+You can now use this MCP server in any tool that is an MCP client. If you are using GitHub copilot, or Claude, you can add this as an MCP server and ask Star Wars questions!
+
 ## Add an MCP client to your copilot
 
 Now we have our server, we can call it from our copilot by adding an MCP client to the app.
@@ -264,72 +249,28 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
     dotnet add package ModelContextProtocol --prerelease
     ```
 
-1. Comment out or delete the `WookiepediaTool` and `ToolsOptions` - you won't need this anymore as we are using the MCP server. You can also delete the `Tools` section from the `appsettings.json`.
+1. Comment out or delete the `WookiepediaTool` and `ToolsOptions` - you won't need this anymore as we are using the MCP server.
 
 ### Add configuration for the tool
 
-1. You will need to store configuration to run the MCP server over stdio, so add the following to your `appsettings.json` file:
+1. Create a class to store configuration for the MCP server. For this app, we will hard code these options. Create a new file called `MCPServerOptions.cs` with the following code:
 
-    ```json
-    "MCPServers": {
-        "Name": "StarWarsMCPServer",
-        "Command": "dotnet",
-        "Arguments": [
-            "run", 
+    ```cs
+    namespace StarWarsCopilot;
+
+    public static class MCPServerOptions
+    {
+        public static string Name => "StarWarsMCPServer";
+        public static string Command => "dotnet";
+        public static List<string> Arguments => [
+            "run",
             "--project",
-            "<path>/StarWarsMCPServer/StarWarsMCPServer.csproj"
-        ]
+            "<path>/StarWarsMCPServer.csproj"
+        ];
     }
     ```
 
     Replace `<path>` with the path to your MCP server project.
-
-1. Create a class to map these options. Create a new file called `MCPServerOptions.cs` with the following code:
-
-    ```cs
-    using System.ComponentModel.DataAnnotations;
-    
-    namespace StarWarsCopilot;
-    
-    /// <summary>
-    /// Configuration settings for MCP Servers
-    /// </summary>
-    public class MCPServerOptions
-    {
-        public const string SectionName = "MCPServers";
-    
-        /// <summary>
-        /// The name of the MCP server
-        /// </summary>
-        [Required]
-        public string Name { get; set; } = string.Empty;
-    
-        /// <summary>
-        /// The command to run the MCP server
-        /// </summary>
-        [Required]
-        public string Command { get; set; } = string.Empty;
-    
-        /// <summary>
-        /// The arguments to pass to the MCP server command
-        /// </summary>
-        [Required]
-        public List<string> Arguments { get; set; } = [];
-    }
-    ```
-
-1. In the `Program.cs` file, load these options. Add the following code after loading the LLM options. You can also remove the code to load the tool options.
-
-    ```cs
-    // Get the MCP Server configuration
-    var mcpServerOptions = configuration.GetSection(MCPServerOptions.SectionName)
-                                        .Get<MCPServerOptions>();
-    
-    if (mcpServerOptions == null)
-    {
-        throw new InvalidOperationException("MCP Server configuration is missing. Please check your appsettings.json file.");
-    }
-    ```
 
 ### Create the MCP client
 
@@ -339,14 +280,14 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
     using ModelContextProtocol.Client;
     ```
 
-1. Right before the `chatOptions` are defined, create an MCP client using the options loaded from your app settings:
+1. Right before the `chatOptions` are defined, create an MCP client using the hard coded options:
 
     ```cs
     var clientTransport = new StdioClientTransport(new()
     {
-        Name = mcpServerOptions.Name,
-        Command = mcpServerOptions.Command,
-        Arguments = mcpServerOptions.Arguments,
+        Name = MCPServerOptions.Name,
+        Command = MCPServerOptions.Command,
+        Arguments = MCPServerOptions.Arguments,
     }, loggerFactory: factory);
     
     await using var mcpClient = await McpClientFactory.CreateAsync(clientTransport,

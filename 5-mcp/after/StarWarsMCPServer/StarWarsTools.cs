@@ -1,35 +1,18 @@
 using System.ComponentModel;
 using System.Text.Json;
 
-using Microsoft.Extensions.Configuration;
 using ModelContextProtocol.Server;
-using StarWarsMCPServer;
+
+namespace StarWarsMCPServer;
 
 [McpServerToolType]
 public static class StarWarsTools
 {
-    private readonly static ToolsOptions _toolsOptions = new();
-
     private readonly static HttpClient _httpClient = new();
 
     static StarWarsTools()
     {
-        // Build the configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
-        // Get the Tools configuration
-        _toolsOptions = configuration.GetSection(ToolsOptions.SectionName)
-                                     .Get<ToolsOptions>()!;
-
-        if (_toolsOptions == null)
-        {
-            throw new InvalidOperationException("Tools configuration is missing. Please check your appsettings.json file.");
-        }
-
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_toolsOptions.TavilyApiKey}");
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {ToolsOptions.TavilyApiKey}");
     }
 
     [McpServerTool(Name = "WookiepediaTool"),

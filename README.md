@@ -13,6 +13,7 @@ To complete this workshop you will need:
   - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
   - An IDE with C# such as [VS Code](http://code.visualstudio.com) with the [C# Dev Kit extension](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) installed, [Visual Studio](https://visualstudio.microsoft.com) with the .NET workload installed, or [JetBrains Rider](https://www.jetbrains.com/rider/)
 - Access to an LLM running on Azure OpenAI service, as well as the Azure AI Inference service (your instructor can provide this)
+- The latest version of Node installed
 - Optional [Foundry Local](https://learn.microsoft.com/azure/ai-foundry/foundry-local/) installed with Phi-4 mini downloaded (Mac or Windows device required)
   - To download Phi-4 mini, install foundry local, then run `foundry model download phi-4-mini`
 
