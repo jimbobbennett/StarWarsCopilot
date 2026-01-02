@@ -28,7 +28,7 @@ Let's try our copilot using a DeepSeek model and the Azure AI Inference SDK
 1. Set the AI inference model name and endpoint in your user secrets:
 
     ```bash
-    dotnet user-secrets set "AIInference:Endpoint" "https://codemash.services.ai.azure.com/models"
+    dotnet user-secrets set "AIInference:Endpoint" "https://starwarscopilot.services.ai.azure.com/models"
     dotnet user-secrets set "AIInference:ModelName" "DeepSeek-R1-0528"
     ```
 

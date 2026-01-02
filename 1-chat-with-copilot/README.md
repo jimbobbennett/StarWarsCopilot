@@ -43,7 +43,7 @@ The next step is to configure some secrets to store the connection details for t
 1. Set the secrets for the API key, endpoint, and model name.
 
     ```bash
-    dotnet user-secrets set "OpenAI:Endpoint" "https://codemash.openai.azure.com/"
+    dotnet user-secrets set "OpenAI:Endpoint" "https://starwarscopilot.openai.azure.com"
     dotnet user-secrets set "OpenAI:APIKey" "..."
     dotnet user-secrets set "OpenAI:ModelName" "gpt-5-mini"
     ```

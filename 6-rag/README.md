@@ -23,41 +23,6 @@ Some use cases for RAG are:
 
 Let's create a RAG tool in our Star Wars MCP server that can retrieve details about purchases of Star Wars figurines. You'll be querying a database in Azure Storage, and your instructor has created this for you already and populated it with data.
 
-<details>
-<summary>Create your own Azure storage</summary>
-If you are working through this outside of an organized workshop, you can create the azure storage account with the following script, using the Azure CLI:
-
-```bash
-# Create Storage Account (if not exists)
-az storage account create \
-  --name storagestarwars \
-  --resource-group <your-resource-group> \
-  --location <location> \
-  --sku Standard_LRS \
-  --kind StorageV2
-```
-
-Replace `<your-resource-group>` with the name of your resource group, and `<location>` with the region you are using.
-
-```bash
-# Retrieve storage connection string
-az storage account show-connection-string \
-  --resource-group <your-resource-group> \
-  --name storagestarwars \
-  --query connectionString \
-  --output tsv
-```
-
-```bash
-# Create Tables
-az storage table create --account-name storagestarwars --name Figurines
-az storage table create --account-name storagestarwars --name Orders
-az storage table create --account-name storagestarwars --name OrderFigurines
-```
-
-Once the tables are created, run the `DataLoader` project from the [`DataLoader`](./DataLoader/) folder to insert data.
-</details>
-
 This database has 3 tables:
 
 - **Figurines** - this table contains a list of Star Wars characters that you can buy as a figurine, with a name, cost, and description
@@ -97,27 +62,28 @@ erDiagram
 
 Open the `StarWarsMCPServer` project.
 
-1. Add a new entry to the `appsettings.json` file for the Azure Storage connection string:
+1. Add a new user secret for the Azure Storage connection string
 
-    ```json
-    {
-        "Tools": {
-            "TavilyApiKey": "",
-            "StorageConnectionString": ""
-        }
-    }
+    ```bash
+    dotnet user-secrets set "AzureStorage:ConnectionString" "..."
     ```
 
     Your instructor can provide the connection string.
 
-1. Add a new property to the `ToolsOptions` class for the connection string:
+1. Add a new property to the `ToolsOptions` class for the connection string, along with a backing field:
 
     ```cs
-    /// <summary>
-    /// The connection string for Azure Storage
-    /// </summary>
-    [Required]
-    public string StorageConnectionString { get; set; } = string.Empty;
+    private static readonly string? _azureStorageConnectionString;
+    public static string? AzureStorageConnectionString => _azureStorageConnectionString;
+    ```
+
+1. Load this connection string in the constructor after the code to load the Tavily API key:
+
+    ```cs
+    if (!secretProvider.TryGet("AzureStorage:ConnectionString", out _azureStorageConnectionString))
+    {
+        throw new InvalidOperationException("AzureStorage:ConnectionString is not configured in User Secrets.");
+    }
     ```
 
 ### Add the tool
@@ -213,13 +179,7 @@ The tool we will be adding can load details from the tables using one or more co
             return JsonSerializer.Serialize(new { error = "At least one parameter is required: orderNumber, characterName, or customerName." });
         }
 
-        if (string.IsNullOrWhiteSpace(_toolsOptions.StorageConnectionString))
-        {
-            return JsonSerializer.Serialize(new { error = "Storage connection string is not configured." });
-        }
-
-        var connStr = _toolsOptions.StorageConnectionString;
-        var serviceClient = new TableServiceClient(connStr);
+        var serviceClient = new TableServiceClient(ToolsOptions.AzureStorageConnectionString);
 
         // Get the orders that match the provided order number or customer name
         var orders = await GetOrders(serviceClient, orderNumber, customerName);
@@ -330,4 +290,4 @@ The Copilot now knows about purchases of Star Wars figurines, and when you ask a
 
 In this part you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
 
-In the [next part](../7-vector-database/README.md) you will learn about vector databases, and use these for RAG.
+In the [next part](../8-multimodal/README.md) you will learn about using multimodal AI, and add a tool that uses AI to generate images from a text prompt.

@@ -1,23 +1,27 @@
-using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Configuration;
 
 namespace StarWarsMCPServer;
 
-/// <summary>
-/// Configuration settings for the tools
-/// </summary>
-public class ToolsOptions
+public static class ToolsOptions
 {
-    public const string SectionName = "Tools";
+    private static readonly string? _tavilyApiKey;
+    private static readonly string? _azureStorageConnectionString;
 
-    /// <summary>
-    /// The API key for Tavily
-    /// </summary>
-    [Required]
-    public string TavilyApiKey { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// The connection string for Azure Storage
-    /// </summary>
-    [Required]
-    public string StorageConnectionString { get; set; } = string.Empty;
+    static ToolsOptions()
+    {
+        var config = new ConfigurationBuilder().AddUserSecrets<Program>().Build();
+
+        var secretProvider = config.Providers.First();
+        if (!secretProvider.TryGet("Tavily:ApiKey", out _tavilyApiKey))
+        {
+            throw new InvalidOperationException("Tavily:ApiKey is not configured in User Secrets.");
+        }
+        if (!secretProvider.TryGet("AzureStorage:ConnectionString", out _azureStorageConnectionString))
+        {
+            throw new InvalidOperationException("AzureStorage:ConnectionString is not configured in User Secrets.");
+        }
+    }
+
+    public static string TavilyApiKey => _tavilyApiKey!;
+    public static string? AzureStorageConnectionString => _azureStorageConnectionString;
 }

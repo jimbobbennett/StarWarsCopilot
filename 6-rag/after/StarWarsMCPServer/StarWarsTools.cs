@@ -1,38 +1,20 @@
 using System.ComponentModel;
 using System.Text.Json;
 
-using Microsoft.Extensions.Configuration;
-using ModelContextProtocol.Server;
-
 using Azure.Data.Tables;
 
-using StarWarsMCPServer;
+using ModelContextProtocol.Server;
+
+namespace StarWarsMCPServer;
 
 [McpServerToolType]
 public static class StarWarsTools
 {
-    private readonly static ToolsOptions _toolsOptions = new();
-
     private readonly static HttpClient _httpClient = new();
 
     static StarWarsTools()
     {
-        // Build the configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
-        // Get the Tools configuration
-        _toolsOptions = configuration.GetSection(ToolsOptions.SectionName)
-                                     .Get<ToolsOptions>()!;
-
-        if (_toolsOptions == null)
-        {
-            throw new InvalidOperationException("Tools configuration is missing. Please check your appsettings.json file.");
-        }
-
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_toolsOptions.TavilyApiKey}");
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {ToolsOptions.TavilyApiKey}");
     }
 
     [McpServerTool(Name = "WookiepediaTool"),
@@ -53,6 +35,7 @@ public static class StarWarsTools
 
         return await response.Content.ReadAsStringAsync();
     }
+
 
     private static async Task<List<TableEntity>> GetOrders(TableServiceClient serviceClient, int orderNumber, string customerName)
     {
@@ -113,14 +96,8 @@ public static class StarWarsTools
             {
                 return JsonSerializer.Serialize(new { error = "At least one parameter is required: orderNumber, characterName, or customerName." });
             }
-
-            if (string.IsNullOrWhiteSpace(_toolsOptions.StorageConnectionString))
-            {
-                return JsonSerializer.Serialize(new { error = "Storage connection string is not configured." });
-            }
-
-            var connStr = _toolsOptions.StorageConnectionString;
-            var serviceClient = new TableServiceClient(connStr);
+            
+            var serviceClient = new TableServiceClient(ToolsOptions.AzureStorageConnectionString);
 
             // Get the orders that match the provided order number or customer name
             var orders = await GetOrders(serviceClient, orderNumber, customerName);
