@@ -9,7 +9,7 @@ In this part you will learn how to:
 
 ## Microsoft.Extensions.AI
 
-In the previous part you connected to an OpenAI model running on Azure AI Foundry using an `AzureOpenAIClient`. This client lets you connect to any model that supports the OpenAI API standard running on Azure.
+In the previous part you connected to an OpenAI model running on Microsoft Foundry using an `AzureOpenAIClient`. This client lets you connect to any model that supports the OpenAI API standard running on Azure.
 
 There are many different APIs for interacting with LLMs, depending on the platform. These are basically the same style of API - you connect to an LLM and send a chat history, but they are all subtly different, requiring different APIs and SDKs.
 

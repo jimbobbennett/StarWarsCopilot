@@ -23,5 +23,5 @@ public static class ToolsOptions
     }
 
     public static string TavilyApiKey => _tavilyApiKey!;
-    public static string? AzureStorageConnectionString => _azureStorageConnectionString;
+    public static string AzureStorageConnectionString => _azureStorageConnectionString!;
 }

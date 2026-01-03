@@ -74,7 +74,7 @@ Open the `StarWarsMCPServer` project.
 
     ```cs
     private static readonly string? _azureStorageConnectionString;
-    public static string? AzureStorageConnectionString => _azureStorageConnectionString;
+    public static string AzureStorageConnectionString => _azureStorageConnectionString!;
     ```
 
 1. Load this connection string in the constructor after the code to load the Tavily API key:
@@ -290,4 +290,4 @@ The Copilot now knows about purchases of Star Wars figurines, and when you ask a
 
 In this part you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
 
-In the [next part](../8-multimodal/README.md) you will learn about using multimodal AI, and add a tool that uses AI to generate images from a text prompt.
+In the [next part](../7-multimodal/README.md) you will learn about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.

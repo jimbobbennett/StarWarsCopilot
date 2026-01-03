@@ -1,15 +1,15 @@
-# Multimodal AI
+# Multi-modal AI
 
-In the [previous part](../7-vector-database/README.md) you learned about vector databases, and used these for RAG.
+In the [previous part](../6-rag/README.md) you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
 
 In this part you will learn:
 
-- What are the multimodal capabilities of AI models
+- What are the multi-modal capabilities of AI models
 - How to add a tool to generate images from text
 - How to tweak a prompt to handle content policies
 - How tools can return details on how to call them correctly to avoid errors
 
-## Multimodal capabilities of AI models
+## Multi-modal capabilities of AI models
 
 In the previous parts of this workshop, you focused on text generation using text prompts. There are AI models that also support other modalities of inputs and outputs. This includes:
 
@@ -21,7 +21,7 @@ There are many advanced models that can handle multiple modalities at once, mixi
 
 ## Create an image generation tool
 
-In this workshop, you are going to use a simple text to image model to generate Star Wars images. This can then be used to generate images based on the figurines our customers have purchased, or details from Wookiepedia, or the movie scripts in our vector database.
+In this workshop, you are going to use a simple text to image model to generate Star Wars images. This can then be used to generate images based on the figurines our customers have purchased, or details from Wookiepedia.
 
 This will be created as another tool. There's no reason at all a tool can't call use AI, so you can have a copilot that uses an AI that calls a tool, that calls another AI. That other AI could also call tools and so on.
 
@@ -29,48 +29,47 @@ You can think of the MCP server as any black-box API. It exposes an interface fo
 
 ### Configure the MCP server
 
-First you need to configure the MCP server to connect to the image generation model. The model you will be using is [DALL-E 3](https://openai.com/index/dall-e-3/) running on Azure AI Foundry.
+First you need to configure the MCP server to connect to the image generation model. The model you will be using is [DALL-E 3](https://openai.com/index/dall-e-3/) running on Azure OpenAI Service (this is **not** running on Microsoft Foundry).
 
 1. Open the `StarWarsMCPServer` project.
 
-1. Add new entries to the `appsettings.json` file for the Azure AI Foundry model, API key, and endpoint:
+1. Add user secrets for the model connection details
 
-    ```json
-    {
-        "Tools": {
-            "TavilyApiKey": "",
-            "StorageConnectionString": "",
-            "PineconeApiKey": "",
-            "ModelId": "",
-            "AzureOpenAIEndpoint": "",
-            "AzureApiKey": ""
-            
-        }
-    }
+    ```bash
+    dotnet user-secrets set "ImageGeneration:Endpoint" "https://star-wars-open-ai.openai.azure.com/"
+    dotnet user-secrets set "ImageGeneration:APIKey" "..."
+    dotnet user-secrets set "ImageGeneration:ModelName" "dall-e-3"
     ```
 
     Your instructor can provide these details.
 
-1. Add new properties to the `ToolsOptions` class for these values:
+1. Add new properties and backing fields to the `ToolsOptions` class for these values:
 
     ```cs
-    /// <summary>
-    /// The model ID to use for image generation
-    /// </summary>
-    [Required]
-    public string ModelId { get; set; } = string.Empty;
+    private static readonly string? _imageGenerationEndpoint;
+    private static readonly string? _imageGenerationApiKey;
+    private static readonly string? _imageGenerationModel;
 
-    /// <summary>
-    /// The Azure OpenAI API endpoint URL
-    /// </summary>
-    [Required]
-    public string AzureOpenAIEndpoint { get; set; } = string.Empty;
+    public static string ImageGenerationEndpoint => _imageGenerationEndpoint!;
+    public static string ImageGenerationApiKey => _imageGenerationApiKey!;
+    public static string ImageGenerationModel => _imageGenerationModel!;
+    ```
 
-    /// <summary>
-    /// The Azure API key
-    /// </summary>
-    [Required]
-    public string AzureApiKey { get; set; } = string.Empty;
+1. Load these properties in the constructor:
+
+    ```cs
+    if (!secretProvider.TryGet("ImageGeneration:Endpoint", out _imageGenerationEndpoint))
+    {
+        throw new InvalidOperationException("ImageGeneration:Endpoint is not configured in User Secrets.");
+    }
+    if (!secretProvider.TryGet("ImageGeneration:ApiKey", out _imageGenerationApiKey))
+    {
+        throw new InvalidOperationException("ImageGeneration:ApiKey is not configured in User Secrets.");
+    }
+    if (!secretProvider.TryGet("ImageGeneration:ModelName", out _imageGenerationModel))
+    {
+        throw new InvalidOperationException("ImageGeneration:ModelName is not configured in User Secrets.");
+    } 
     ```
 
 ### Add the tool
@@ -124,9 +123,9 @@ First you need to configure the MCP server to connect to the image generation mo
 
     ```cs
     // Create the Azure OpenAI ImageClient
-    var client = new AzureOpenAIClient(new Uri(_toolsOptions.AzureOpenAIEndpoint),
-                                        new ApiKeyCredential(_toolsOptions.AzureApiKey))
-                                        .GetImageClient(_toolsOptions.ModelId);
+    var client = new AzureOpenAIClient(new Uri(ToolsOptions.ImageGenerationEndpoint),
+                                       new Azure.AzureKeyCredential(ToolsOptions.ImageGenerationApiKey))
+                                    .GetImageClient(ToolsOptions.ImageGenerationModel);
     ```
 
     This code creates an Azure OpenAI client, then from there gets an image generation client. The Azure OpenAI client SDK allows you to create a range of clients, such as chat completions, embedding generation, audio, and more.
@@ -324,6 +323,6 @@ This is followed by the updated tool call:
 
 ## Summary
 
-In this part you learned about using multimodal AI, and add a tool that uses AI to generate images from a text prompt.
+In this part you learned about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
 
-In the [next part](../9-agents/README.md) you will learn how to create agents using Semantic Kernel to connect all our capabilities and tools.
+In the [next part](../8-agents/README.md) you will learn how to create agents using the Microsoft Agent Framework to connect all our capabilities and tools.

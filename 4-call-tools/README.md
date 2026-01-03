@@ -71,7 +71,7 @@ To help our LLM have better knowledge, we can add a tool that can do a web searc
 
 ### Use the Azure Open AI deployed LLM
 
-Different LLMs have different capabilities when it comes to calling tools, so for the best response use the OpenAI model deployed to Azure AI Foundry. To do this:
+Different LLMs have different capabilities when it comes to calling tools, so for the best response use the OpenAI model deployed to Microsoft Foundry. To do this:
 
 1. Uncomment the code to use the `AzureOpenAIClient`
 

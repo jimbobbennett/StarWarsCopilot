@@ -1,46 +1,24 @@
+using System.ClientModel;
 using System.ComponentModel;
 using System.Text.Json;
 
-using Microsoft.Extensions.Configuration;
-using ModelContextProtocol.Server;
-
+using Azure.AI.OpenAI;
 using Azure.Data.Tables;
+using OpenAI.Images;
 
-using Pinecone;
+using ModelContextProtocol.Server;
+using OpenAI;
 
-using StarWarsMCPServer;
+namespace StarWarsMCPServer;
 
 [McpServerToolType]
 public static class StarWarsTools
 {
-    private readonly static ToolsOptions _toolsOptions = new();
-
     private readonly static HttpClient _httpClient = new();
-
-    private readonly static PineconeClient _pinecone;
-    private readonly static string _indexName = "movie-scripts";
 
     static StarWarsTools()
     {
-        // Build the configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-            .Build();
-
-        // Get the Tools configuration
-        _toolsOptions = configuration.GetSection(ToolsOptions.SectionName)
-                                     .Get<ToolsOptions>()!;
-
-        if (_toolsOptions == null)
-        {
-            throw new InvalidOperationException("Tools configuration is missing. Please check your appsettings.json file.");
-        }
-
-        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {_toolsOptions.TavilyApiKey}");
-
-        // Create the Pinecone client
-        _pinecone = new PineconeClient(_toolsOptions.PineconeApiKey);
+        _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {ToolsOptions.TavilyApiKey}");
     }
 
     [McpServerTool(Name = "WookiepediaTool"),
@@ -61,6 +39,7 @@ public static class StarWarsTools
 
         return await response.Content.ReadAsStringAsync();
     }
+
 
     private static async Task<List<TableEntity>> GetOrders(TableServiceClient serviceClient, int orderNumber, string customerName)
     {
@@ -122,13 +101,7 @@ public static class StarWarsTools
                 return JsonSerializer.Serialize(new { error = "At least one parameter is required: orderNumber, characterName, or customerName." });
             }
 
-            if (string.IsNullOrWhiteSpace(_toolsOptions.StorageConnectionString))
-            {
-                return JsonSerializer.Serialize(new { error = "Storage connection string is not configured." });
-            }
-
-            var connStr = _toolsOptions.StorageConnectionString;
-            var serviceClient = new TableServiceClient(connStr);
+            var serviceClient = new TableServiceClient(ToolsOptions.AzureStorageConnectionString);
 
             // Get the orders that match the provided order number or customer name
             var orders = await GetOrders(serviceClient, orderNumber, customerName);
@@ -197,69 +170,54 @@ public static class StarWarsTools
         }
     }
 
-    [McpServerTool(Name = "SearchStarWarsScriptsTool"),
-     Description("A tool for searching Star Wars movie scripts using a vector database. " +
-                 "This tool takes a query and returns a list of relevant script chunks.")]
-    public static async Task<string> SearchStarWarsScripts([Description("The query to search for information from the Star Wars movie scripts.")] string query,
-                                                           [Description("Optional. The name of the Star Wars movie to search within." +
-                                                                        "The acceptable values are: 'the-phantom-menace', 'attack-of-the-clones'," +
-                                                                        "'revenge-of-the-sith', 'a-new-hope', 'the-empire-strikes-back'," +
-                                                                        "'return-of-the-jedi' or nothing.")] string? movieName)
+    [McpServerTool(Name = "GenerateStarWarsImageTool"),
+     Description("A tool for generating images based on Star Wars. This tool takes a description" +
+                 "of the required image and returns a URL to the generated image.")]
+    public static async Task<string> GenerateStarWarsImage([Description("The description of the Star Wars image to generate.")] string description)
     {
         try
         {
-            // Validate the query
-            if (string.IsNullOrWhiteSpace(query))
+            // Validate the description
+            if (string.IsNullOrWhiteSpace(description))
             {
-                return JsonSerializer.Serialize(new { error = "Query cannot be empty." });
+                return JsonSerializer.Serialize(new { error = "Description cannot be empty." });
             }
 
-            // Validate the movie name
-            var validMovies = new[]
-            {
-                "the-phantom-menace",
-                "attack-of-the-clones",
-                "revenge-of-the-sith",
-                "a-new-hope",
-                "the-empire-strikes-back",
-                "return-of-the-jedi"
-            };
+            var client = new AzureOpenAIClient(new Uri(ToolsOptions.ImageGenerationEndpoint),
+                                               new Azure.AzureKeyCredential(ToolsOptions.ImageGenerationApiKey))
+                                            .GetImageClient(ToolsOptions.ImageGenerationModel);
 
-            if (!string.IsNullOrWhiteSpace(movieName) && !validMovies.Contains(movieName.ToLowerInvariant()))
-            {
-                return JsonSerializer.Serialize(new { error = $"Invalid movie name '{movieName}'. Valid options are: {string.Join(", ", validMovies)}." });
-            }
+            // Generate the image
+            var generatedImage = await client.GenerateImageAsync($"""
+                Generate a cartoon style image based on the following description or story:
+                "{description}"
 
-            // Create the search request
-            var searchRequest = new SearchRecordsRequestQuery
-            {
-                TopK = 20,
-                Inputs = new Dictionary<string, object?> { { "text", query } },
-            };
+                The image should be in the style of a parody of the original Star Wars trilogy, looking like a movie from the 1970s or 1980s.
+                Make the image high quality, hyper real, with vivid colors and a cinematic feel from an animated movie.
 
-            // If a movie name is provided, filter the search results to only include that movie
-            if (!string.IsNullOrWhiteSpace(movieName))
-            {
+                This image is designed to be the used on front cover of a book that matches the given description or story.
+                """,
+                    new ImageGenerationOptions { Size = GeneratedImageSize.W1024xH1024 });
 
-                searchRequest.Filter = new Dictionary<string, object?> { { "movie_name", movieName.ToLowerInvariant() } };
-            }
-
-            // Perform the search using the Pinecone index
-            var indexClient = _pinecone.Index(_indexName);
-            var response = await indexClient.SearchRecordsAsync(
-                "Star Wars",
-                new SearchRecordsRequest
-                {
-                    Query = searchRequest,
-                    Fields = ["movie_name", "chunk_text"],
-                }
-            );
-
-            // Return the search results
-            return JsonSerializer.Serialize(response);
+            // Return the URL of the generated image
+            return JsonSerializer.Serialize(new { imageUrl = generatedImage.Value.ImageUri });
         }
         catch (Exception ex)
         {
+            if (ex.Message.Contains("content_policy_violation"))
+            {
+                return JsonSerializer.Serialize(new
+                {
+                    error = """
+                    A content error occurred while generating the image.
+                    Please retry this tool with an adjusted prompt, such as changing named characters to very detailed
+                    descriptions of the characters. Include details like race, gender, age, dress style, distinguishing features
+                    (e.g., 'an old, small, green Jedi Master with pointy ears, a tuft of white hair and wrinkles' instead of 'Yoda').
+                    If the description contains anything sexual or violent, replace with a more PG version of the description.
+                    """
+                });
+            }
+            
             return JsonSerializer.Serialize(new { error = ex.Message });
         }
     }

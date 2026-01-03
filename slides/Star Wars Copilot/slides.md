@@ -210,7 +210,7 @@ If you need it, each lesson has an `after` folder with the final code, which you
 
 In this lesson you will create a C# application to chat with an LLM.
 
-You will be using GPT 4o Mini deployed to Azure AI Foundry.
+You will be using GPT 4o Mini deployed to Microsoft Foundry.
 
 <!--
 
@@ -218,7 +218,7 @@ Anyone created a simple chat app before?
 
 In this lesson you will create a basic chat app where you can prompt an LLM.
 
-This will use GPT 4o Mini, which I've already deployed for you to Azure AI Foundry, which is Microsoft's AI platform. The endpoint and API key are in the Gist I linked earlier
+This will use GPT 4o Mini, which I've already deployed for you to Microsoft Foundry, which is Microsoft's AI platform. The endpoint and API key are in the Gist I linked earlier
 
 -->
 
@@ -267,7 +267,7 @@ In this lesson you will add history to your chat to make it more helpful, and le
 
 <!--
 
-This will use DeepSeek, which I've already deployed for you to Azure AI Foundry, which is Microsoft's AI platform. The endpoint and API key are in the Gist I linked earlier
+This will use DeepSeek, which I've already deployed for you to Microsoft Foundry, which is Microsoft's AI platform. The endpoint and API key are in the Gist I linked earlier
 
 -->
 
