@@ -1,583 +1,347 @@
 # Agents
 
-In the [previous part](../8-multimodal/README.md) you learned about using multimodal AI, and add a tool that uses AI to generate images from a text prompt.
+In the [previous part](../7-multimodal/README.md) you learned about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
 
 In this part you will learn:
 
-- What are agents
-- How to create a Semantic Kernel project
-- How to orchestrate agents using Semantic Kernel
+- Agents vs copilots
+- How to create an agent using the Microsoft Agent Framework
+- How to orchestrate agents using the Microsoft Agent Framework
 
-## What are AI agents
+## Agents vs copilots
 
-AI agents are AI powered code that can understand an instruction, reason over it, then act autonomously calling tools or other agents as required. This probably doesn't seem a new concept - you've actually built agents already in yor copilot. When you ask the copilot to do something, it will reason over the request, and call the relevant tools as it decides, essentially acting autonomously, rather than following explicit instructions.
+A copilot is an AI-powered assistant, designed to sit with you and provide you with information, driven by a chat-based user interaction. Copilots are generic, supporting a wide range of tasks.
 
-You can see this in action in the copilot, by asking a question that requires multiple tools:
+Agents are specialized applications that perform specific tasks. They are powered by AI, can use tools, and have instructions that guide what the agent can do. Agents are lit 🔥:
 
-```output
-User > Lando Calrissian ordered some figurines. Create an image for one of these based on their actions in the Star Wars movie scripts
-Assistant > An image of Leia Organa, fearless leader of the Rebel Alliance, standing boldly on a battlefield, her expression determined and inspiring, with blaster in hand, leading troops into battle during the Galactic Civil War, I have created. See it here, you can:
+**L** - They are powered by LLMs
+**I** - They have instructions, essentially the system prompt
+**T** - They use tools
 
-![Leia Organa leading troops](https://dalleproduse.blob.core.windows.net/private/images/...) 
+> Blame [Dona Sarkar from Microsoft](https://www.linkedin.com/in/donasarkar/) for this...
 
-Careful you must be, the path of the light side I encourage. The dark side, tempting it is and full of pain. Choose peace, you should.
-```
+You can think of the division this way:
 
-This prompt will be reasoned over by the AI, and it will call the `StarWarsPurchaseTool` to get what figurines Lando purchased. It will then pick one character, and decide if it needs to call the `SearchStarWarsScriptsTool` or not. It probably won't as the AI model already has been trained on the Star Wars universe. It will then call the `GenerateStarWarsImageTool` tool to create the image.
+- The copilot is the chat interface that uses an LLM and tools to provide you with help and guidance
+- Agents are LLM powered tools that can be triggered in multiple ways, one of which is via a copilot
 
-### Components of an AI agent
+Agents can operate as part of the conversation, or can operate independently, triggered by the user or by another trigger, making decisions on what to do, then acting on those decisions.
 
-Agents are typically single responsibility, doing one task and doing it well. The main components of an agent are:
+### Agent frameworks
 
-- **An instruction** - Agents typically do one job, and have an instruction, essentially a system prompt, that defines the capabilities of the agent and how it should act
-- **An LLM** - Agents use an LLM to decide what to do with the prompt provided
-- **Tools** - Agents can interact with one or more tools to achieve the task they are built for
-- **A description** - The description of an agent helps when you are using a framework that orchestrates multiple agents. The description is used by the orchestrator to decide what agents to call to perform a task.
+Rather than have to write all the code for an agent yourself, there are plenty of agent frameworks available. These manage prompting the LLM, storing information between agent runs, calling tools, and orchestrating multiple agents where necessary.
 
-### Triggering AI agents
+The framework you'll be using for this workshop is the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview). This is a new agent framework that supports .NET and Python, and is heavily based on a couple of previous AI frameworks from Microsoft, Semantic Kernel, and AutoGen.
 
-We think of AI agents as autonomous, but they are still controlled by something. In the case of a copilot, the agent is triggered by a chat interface, but any other trigger would work.
+## Create a story agent
 
-You can think of AI agents a bit like event-driven serverless functions, such as Azure Functions. Something needs to trigger the agent, such as a web hook, a chat request, a timer, detection of an email, anything you can think of.
+In this lesson you are going to create an agent that writes short Star Wars stories. This agent will be exposed as a tool to the copilot.
 
-### AI agent capabilities
+Later in this lesson you'll convert this to a multi-agent system that also creates artwork for the story.
 
-AI agents are only as powerful as the tools you build to interact with them. If you call OpenAI to generate some code, it won't be able to change the code on your machine. Instead you would need a tool to take the results of the interaction with the LLM and have that interact with the code you have locally. This is how applications like GitHub copilot work, they use the LLM to reason over your request and code, then run tools locally to make code updates.
+### Create the story agent class
 
-### AI agent orchestration
+Open the `StarWarsCopilot` project.
 
-When building an agentic AI system, ideally you want a lot of small, specific AI agents that do one job and do it well. You then have some kind of orchestrator that decides what agents to call and in what order. This orchestrator usually has some kind of supervisor agent that decides what to call, and a defined set of orchestration patterns between agents to ensure agents are called in the right order where necessary.
-
-Agents can use handoff orchestration to transfer control from one agent to another, handing off the responsibility of generating a response as necessary. In your app you can define the handoff rules, specifying what conditions are needed for an agent to handoff to another agent in natural language. Agents can hand off to other agents, or to humans for human-in-the-loop systems, for example waiting for confirmation from a human to proceed.
-
-## Semantic Kernel
-
-[Semantic Kernel](https://learn.microsoft.com/semantic-kernel/) is Microsoft's AI application development framework, available for C#, Python, and Java. It allows you to integrate any AI model, add tool support via plugins, add basic application components like telemetry, connect other components, and orchestrate agents.
-
-When Semantic Kernel first came out, it was a pretty powerful framework, especially for planning actions based off prompts, using different LLMs with the same abstractions, and calling plugins, the Semantic Kernel name for tools. At the moment such basic features are not really useful. By using `Microsoft.Extensions.AI`, it's easy to swap different LLMs in and out. By using MCP it's easy to add tools, and modern LLMs are great at planning.
-
-This means for applications like our copilot, frameworks like Semantic Kernel can be overkill. Where they are useful however, is when orchestrating agents.
-
-## Build an agentic app
-
-You will be using Semantic Kernel to create an agentic app that creates stories for customers based off their purchases. The app will look up purchases from a customer, research the characters, create a story using these characters, then generate an cover image for the story. This agentic app will be triggered by text, asking for a purchaser to create a story for, but in the future could be triggered by a new purchase using an Azure Function that monitors for new rows in our database.
-
-### Create the project
-
-In this step, you will create the basic scaffold of this project, adding NuGet packages and loading configuration.
-
-1. Create a new folder for your project called `StarWarsAgentCopilot`. Open this folder in your IDE.
-
-1. Inside this new folder, create a new .NET console project:
+1. Install the Microsoft Agent Framework with OpenAI support NuGet package.
 
     ```bash
-    dotnet new console
+    dotnet add package Microsoft.Agents.AI.OpenAI --version 1.0.0-preview.251219.1
     ```
 
-1. Install the Semantic Kernel NuGet packages, along with some Microsoft Extensions packages.
+1. Create a new folder in the project called `Agents`.
 
-    ```bash
-    dotnet add package Microsoft.SemanticKernel 
-    dotnet add package Microsoft.Extensions.Logging
-    dotnet add package Microsoft.Extensions.Logging.Console
-    dotnet add package Microsoft.Extensions.Configuration.Json
-    ```
+1. Create a new class called `StoryAgent` in a file called `StoryAgent.cs` inside the `Agents` folder.
 
-1. You will need the same configuration as your original copilot, so copy the `appsettings.json`, `LLMOptions.cs`, and `MCPServerOptions.cs` files over from your `StarWarsCopilot` project folder to this folder.
-
-1. Update the namespace for both the `LLMOptions` and `MCPServerOptions` classes to match the project name:
+1. Add the following code to define this class:
 
     ```cs
-    namespace StarWarsAgentCopilot;
-    ```
+    using Microsoft.Agents.AI;
+    using Microsoft.Extensions.AI;
 
-1. You need to make sure the `appsettings.json` file is copied to the output folder when your project is built, so open the `StarWarsAgentCopilot.csproj` file and add the following inside the `<Project>` section:
+    namespace StarWarsCopilot.Agents;
 
-    ```xml
-    <ItemGroup>
-      <None Update="appsettings.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
-    </ItemGroup>
-    ```
-
-1. Delete all the code from your `Program.cs` file, and add the following code to load the application settings:
-
-    ```cs
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.DependencyInjection;
-
-    using StarWarsAgentCopilot;
-
-    // Build the configuration
-    var configuration = new ConfigurationBuilder()
-        .SetBasePath(AppContext.BaseDirectory)
-        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-        .Build();
-    
-    // Get the LLM configuration
-    var llmOptions = configuration.GetSection(LLMOptions.SectionName)
-                                  .Get<LLMOptions>();
-    
-    if (llmOptions == null)
+    class StoryAgent(IChatClient chatClient)
     {
-        throw new InvalidOperationException("LLM configuration is missing. Please check your appsettings.json file.");
-    }
-    
-    // Get the MCP Server configuration
-    var mcpServerOptions = configuration.GetSection(MCPServerOptions.SectionName)
-                                        .Get<MCPServerOptions>();
-    
-    if (mcpServerOptions == null)
-    {
-        throw new InvalidOperationException("MCP Server configuration is missing. Please check your appsettings.json file.");
     }
     ```
 
-### Add Semantic Kernel
+    This code declares a class called `StoryAgent` that is constructed by passing an `IChatClient`. This is the interface from the `Microsoft.Extensions.AI` package that you have been using to abstract different LLMs. By using this, you can control which LLM is used by the agent.
 
-You now have the basic scaffolding of an app. The next step is to add Semantic Kernel.
-
-1. Add a using directive for Semantic Kernel to the top of your `Program.cs` file:
+1. Add the following code to this class to create the agent:
 
     ```cs
-    using Microsoft.SemanticKernel;
-    ```
-
-1. At the bottom of this file, create a kernel builder:
-
-    ```cs
-    Console.WriteLine("Creating kernel...");
-    var builder = Kernel.CreateBuilder();
-    ```
-
-    Semantic Kernel is based around a **kernel**, a dependency injection container that manages all of the services and plugins. The kernel acts as a planner and orchestrator as needed. Like a lot of Microsoft components, the kernel is created using the builder pattern.
-
-1. Add logging to the kernel builder:
-
-    ```cs
-    builder.Services.AddLogging(services =>
-    {
-        services.AddConsole().SetMinimumLevel(LogLevel.Trace);
-    });
-    ```
-
-    This will log everything at a trace level, the same as we had in our copilot. This allows you to see the inner workings of your app.
-
-1. Add an LLM to the builder using an Azure OpenAI service:
-
-    ```cs
-    builder.AddAzureOpenAIChatClient(llmOptions.ModelId,
-                                     llmOptions.Endpoint,
-                                     llmOptions.ApiKey);
-    ```
-
-1. Finally build the kernel:
-
-    ```cs
-    var kernel = builder.Build();
-    ```
-
-### Test the Semantic Kernel app
-
-As a sanity check, you can test the kernel to make sure the basics are configured.
-
-1. Add the following code to the end of your `Program.cs` file to test the kernel:
-
-    ```cs
-    var response = await kernel.InvokePromptAsync("Hello world!");
-    Console.WriteLine($"Response: {response}");
-    ```
-
-1. Run the app:
-
-    ```bash
-    dotnet run
-    ```
-
-    You will see a hello world style response in your terminal, along with a trace log:
-
-    ```output
-    Response: Hello! How can I assist you today?
-    ```
-
-1. Delete these 2 new lines of code as they were just needed for a quick test.
-
-### Add tools
-
-Semantic Kernel has the concept of **Plugins** to provide function calling, or tool calling. Plugins are more than simple tools though, as Semantic Kernel can use dependency injection to manage and compose local tools.
-
-Seeing as we already have tools in our MCP server, we can convert these tools to plugins used by the kernel.
-
-1. Add the MCP NuGet package to the project:
-
-    ```bash
-    dotnet add package ModelContextProtocol --prerelease
-    ```
-
-1. The functionality to convert from an MCP tool to a plugin is still very early pre-release, so add the following to the top of the `Program.cs` file to disable early access errors:
-
-    ```cs
-    #pragma warning disable SKEXP0001
-    #pragma warning disable SKEXP0110
-    ```
-
-1. Add the following using directive to the top of the `Program.cs` file:
-
-    ```cs
-    using ModelContextProtocol.Client;
-    ```
-
-1. Just above the line that builds the kernel, create an MCP client and load the tools:
-
-    ```cs
-    // Create an MCP client
-    await using var mcpClient = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
-    {
-        Name = mcpServerOptions.Name,
-        Command = mcpServerOptions.Command,
-        Arguments = mcpServerOptions.Arguments,
-    }));
-
-    // Retrieve the list of tools available on the MCP server
-    var tools = await mcpClient.ListToolsAsync();
-    ```
-
-1. Add the tools to the builder by converting them to Semantic Kernel functions:
-
-    ```cs
-    builder.Plugins.AddFromFunctions("MCP", tools.Select(t => t.AsKernelFunction()));
-    ```
-
-    Now when the kernel is built, it will have access to all the tools.
-
-### Test the tools
-
-By default Semantic Kernel won't call tools. When you use the kernel, you can define the tool calling behavior, for example use any tool it decides is relevant, use a specific tool, or use no tools. To test the tools, you can turn on automatic function calling and ask a question that a tool would needed to answer.
-
-1. Add the following code to the bottom of the `Program.cs` file:
-
-    ```cs
-    PromptExecutionSettings executionSettings = new()
-    {
-        FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-    };
-    
-    var response = await kernel.InvokePromptAsync("What figurines did Ben Smith purchase?", new KernelArguments(executionSettings));
-    Console.WriteLine($"Response: {response}");
-    ```
-
-1. Run the code. This will launch the MCP server, and use the `StarWarsPurchaseTool` to list the figurines Ben Smith purchased.
-
-    ```output
-    Response: Ben Smith purchased the following figurines:
-    1. Chewbacca - A mighty Wookiee warrior from Kashyyyk, known for his strength, bravery, and skills as a co-pilot of the Millennium Falcon.
-    2. Obi-Wan Kenobi - A noble Jedi Master and mentor to Anakin Skywalker and Luke Skywalker, known for his diplomacy, patience, and wisdom.
-    3. Finn - Originally a stormtrooper who defected from the First Order to become a courageous Resistance fighter, known for bravery and a strong sense of justice.
-    ```
-
-1. Delete the `PromptExecutionSettings` and code to invoke the kernel once you are done.
-
-## Add agents to the app
-
-For our app, we need a number of agents:
-
-- **Supervisor agent** - This agent will be the main point of interaction. It will take the name of a customer, and use other agents to get the figurines that the customer purchased, research those characters, generate a story image, and create the story.
-- **Purchase details agent** - This agent will look up the figurines purchased by the customer. This will use the `StarWarsPurchaseTool`.
-- **Wookiepedia research agent** - This agent will look up details on the characters of the purchased figurines on Wookiepedia. This will use the `WookiepediaTool`.
-- **Image generation agent** - This agent will generate an image for the story. This will use the `GenerateStarWarsImageTool`.
-
-The supervisor agent will be configured to hand off to the other agents as needed, then collate the results and generate a story.
-
-### Create the agents in your app
-
-1. To use the Semantic Kernel agent framework, you need to install a couple of additional NuGet packages:
-
-    ```bash
-    dotnet add package Microsoft.SemanticKernel.Agents.Core
-    dotnet add package Microsoft.SemanticKernel.Agents.Orchestration --prerelease
-    dotnet add package Microsoft.SemanticKernel.Agents.Runtime.InProcess --prerelease
-    ```
-
-1. Add the following Semantic Kernel agent orchestration using directives at the top of the `Program.cs` file:
-
-    ```cs
-    using Microsoft.SemanticKernel.Agents;
-    using Microsoft.SemanticKernel.Agents.Orchestration.Handoff;
-    using Microsoft.SemanticKernel.Agents.Runtime.InProcess;
-    ```
-
-1. Create the supervisor agent by adding the following code to the bottom of the `Program.cs` file, after the kernel has been built:
-
-    ```cs
-    ChatCompletionAgent supervisorAgent =
-        new()
-        {
-            Name = "SupervisorAgent",
-            Description = "This agent supervises the creation of a custom Star Wars story based on the figurines purchased by the customer.",
-            Instructions =
-                """
-                You are an agent designed to supervise the creation of a custom Star Wars story for a store customer who has purchased figurines from our store.
-    
-                When given a customer name, you will retrieve the list of figurines they purchased and use that information to create a personalized story with artwork.
-                To research the characters and lore of the purchased figurines, and to generate the story, you can use other agents as necessary.
-    
-                When you have generated the story and image you will return the text of the story. It is important that you generate an image URL that is relevant to the story, as this will be used to create a visual representation of the story.
-    
-                The story should:
-                - Be at least 2000 words long
-                - Include detail, dialogue, and action to make the story engaging
-                - Have a beginning, middle, and end, and be written in a style that is consistent with the Star Wars universe
-    
-                Return the result as a JSON object in the following format:
-                {
-                    "title": "A Star Wars Adventure",
-                    "story": "Once upon a time in a galaxy far, far away...",
-                    "imageUrl": "https://example.com/image.png"
-                }
-                """,
-            Kernel = kernel,
-            Arguments = new KernelArguments(new PromptExecutionSettings { FunctionChoiceBehavior = FunctionChoiceBehavior.None() })
-        };
-    ```
-
-    This code creates a `ChatCompletionAgent`, an agent that processes chat completions. This agent has a name and description, along with an instruction. This instruction is essentially a system prompt for the agent. It details that the agent should take a customer name, look up the figurines they have purchased, retrieve information about the characters, generate an image, generate a story, then return JSON with the title and body of the story, along with the URL of the generated image.
-
-    This agent is configured to use the current kernel, and not to call any tools itself. This way the agent has to call other agents to achieve the task at hand.
-
-1. Create an agent to retrieve the figurines purchased by the customer:
-
-    ```cs
-    var purchaseExecutionSettings = new PromptExecutionSettings
-    {
-        FunctionChoiceBehavior = FunctionChoiceBehavior.Required(kernel.Plugins.First(p => p.Name == "MCP").Where(f => f.Name == "StarWarsPurchaseTool"))
-    };
-
-    ChatCompletionAgent purchaseDetailsAgent =
-        new()
-        {
-            Name = "PurchaseDetailsAgent",
-            Description = "This agent retrieves the purchase details for a specific customer.",
-            Instructions =
-                """
-                You are an agent designed to retrieve the purchase details for a specific customer.
-    
-                When given a customer name, you will retrieve the list of figurines they purchased.
-                """,
-            Kernel = kernel,
-            Arguments = new KernelArguments(purchaseExecutionSettings)
-        };
-    ```
-
-    This code defines some prompt execution settings. This sets that the agent is required to use the `StarWarsPurchaseTool`.
-
-    This agent is configured to retrieve a list of figurines for a customer using the prompt execution settings to ensure the tool is used.
-
-1. Create an agent to research the characters using Wookiepedia:
-
-    ```cs
-    var wookiepediaExecutionSettings = new PromptExecutionSettings
-    {
-        FunctionChoiceBehavior = FunctionChoiceBehavior.Required(kernel.Plugins.First(p => p.Name == "MCP").Where(f => f.Name == "WookiepediaTool"))
-    };
-    
-    ChatCompletionAgent wookiepediaResearchAgent =
-        new()
-        {
-            Name = "WookiepediaResearchAgent",
-            Description = "This agent retrieves information from Wookiepedia about Star Wars characters.",
-            Instructions =
-                """
-                You are an agent designed to retrieve information from Wookiepedia about Star Wars characters.
-    
-                When given a character name you will search Wookiepedia and return relevant information.
-                """,
-            Kernel = kernel,
-            Arguments = new KernelArguments(wookiepediaExecutionSettings)
-        };
-    ```
-
-    Again this is configured to use a tool, in this case the `WookiepediaTool`. It takes a character and returns details about that character. This agent will be called multiple times, once per character that is retrieved from the purchase details agent.
-
-1. Create an agent to generate the story image:
-
-    ```cs
-    var imageGenerationExecutionSettings = new PromptExecutionSettings
-    {
-        FunctionChoiceBehavior = FunctionChoiceBehavior.Required(kernel.Plugins.First(p => p.Name == "MCP").Where(f => f.Name == "GenerateStarWarsImageTool"))
-    };
-    
-    ChatCompletionAgent imageGenerationAgent = 
-        new()
-        {
-            Name = "ImageGenerationAgent",
-            Description = "This agent generates an image based on a set of figurines of Star Wars characters.",
-            Instructions =
-                """
-                You are an agent designed to generate an image based on a set of Star Wars characters.
-    
-                When given a set of figurines of Star Wars characters, you will create an image that represents them.
-                You will return the URL of the generated image as JSON in the format:
-                {
-                    "imageUrl": "https://example.com/image.png"
-                }
-    
-                If a tool responds asking you to call it again, follow the instructions and make the call again.
-                """,
-            Kernel = kernel,
-            Arguments = new KernelArguments(imageGenerationExecutionSettings)
-        };
-    ```
-
-    Once again, this is configured to always use a tool, the `GenerateStarWarsImageTool`. The response is JSON with a single property, `imageUrl`. The instruction also encourages the agent to retry calling the tool if necessary, in the same was as you did in the copilot.
-
-### Define the handoffs
-
-Handoffs don't happen automatically. Instead you have to define which agents can handoff to which other agents, and describe in natural language how this handoff should happen.
-
-1. Add the following code to define the handoff rules:
-
-    ```cs
-    var handoffs = OrchestrationHandoffs
-        .StartWith(supervisorAgent)
-        .Add(purchaseDetailsAgent)
-        .Add(wookiepediaResearchAgent)
-        .Add(imageGenerationAgent)
-        .Add(supervisorAgent, purchaseDetailsAgent, "Transfer to this agent to get details of the purchased figurines")
-        .Add(supervisorAgent, wookiepediaResearchAgent, "Transfer to this agent to research the characters and lore of the purchased figurines")
-        .Add(supervisorAgent, imageGenerationAgent, "Transfer to this agent to generate an image based on the purchased figurines");
-    ```
-
-    This creates a handoff orchestrator that starts with the supervisor agent, adding the purchase details, Wookiepedia research, and image generation agent as handoff targets. Finally it defines that only the supervisor agent can handoff to the other agents, with details on when this should happen.
-
-1. Create an orchestrator using this handoff:
-
-    ```cs
-    var orchestration = new HandoffOrchestration(
-        handoffs,
-        supervisorAgent,
-        purchaseDetailsAgent,
-        wookiepediaResearchAgent,
-        imageGenerationAgent
+    private readonly AIAgent _agent = chatClient.CreateAIAgent(
+        name: "StarWarsStoryAgent",
+        description: "An agent that creates Star Wars stories based on user prompts.",
+        instructions: @"You are a storytelling agent that creates engaging Star Wars stories based on user prompts. These stories should be imaginative, detailed, and true to the Star Wars universe. These stories should be short, only a few pages long.
+        
+        When prompted to create a story, use the following steps:
+        - Understand the users requests, including the target audience, themes, and any specific characters or settings mentioned.
+        - Form a brief outline of the story, adhering to basic story structure (beginning, middle, end)
+        - Flesh out the outline into a full story, adding descriptive details and dialogue using Star Wars lore and characters where appropriate.
+        - Review the story for coherence, pacing, and engagement.
+        - Present the final story to the user in a captivating manner.
+        - Come up with a creative title for the story.
+        
+        The output created should be in markdown format, with appropriate headings, paragraphs, and dialogue formatting.
+        
+        Do not output any of the internal steps, only the final story in markdown format."
     );
     ```
 
-    This orchestration is now ready to be invoked.
+    The agent is created from the LLMs `IChatClient`. The agent name and description is set, along with a set of instructions that guide the agent. We now have the **L** and **I** of the agent, the LLM and instructions. For this agent, we don't need any tools as the LLM is capable of creating the story.
 
-### Start an agent runtime
-
-When Semantic Kernel runs, it needs an agent thread runtime running. This runtime calls the agents and waits on the results.
-
-1. Create and start the runtime:
+1. We can expose this agent as a tool that the copilot can use, so add the following method to get it as a tool:
 
     ```cs
-    var runtime = new InProcessRuntime();
-    await runtime.StartAsync();
+    public AITool AsTool() => _agent.AsAIFunction();
     ```
 
-1. Ask the user which customer they want to generate a story for:
+### Use the story agent from the copilot
+
+This agent can now be added to the tools available to the copilot.
+
+1. In the `Program.cs` file, add a using directive for the `StarWarsCopilot.Agents` to the top of the file:
 
     ```cs
-    Console.WriteLine("Which customer would you like to create a story for? (e.g., 'Ben Smith')");
-    var customerName = Console.ReadLine();
+    using StarWarsCopilot.Agents;
     ```
 
-1. Start the agent orchestration:
+1. Replace the code that gets the tools from the MCP server with the following:
 
     ```cs
-    var result = await orchestration.InvokeAsync(customerName!, runtime);
+    IList<AITool> tools = [..await mcpClient.ListToolsAsync()];
+    tools.Add(new StoryAgent(chatClient).AsTool());
     ```
 
-    This will start the agent thread running in the background. This call will return once the agent has started.
+    This code creates a list of tools from the MCP server as `AITool`, and adds the story agent to that list. This list is then passed to the `ChatOptions` in the existing code.
 
-1. Wait for the agent thread to finish:
+1. The copilot is capable of creating a story by itself, and will do so in the style of Yoda, based off the system prompt. We can encourage it to use the tool and not change the style by adding a note on this to the system prompt:
 
     ```cs
-    string output = await result.GetValueAsync(TimeSpan.FromSeconds(300));
+    var history = new List<ChatMessage>
+    {
+        new(ChatRole.System, @"
+            You are a helpful assistant that provides information about Star Wars.
+            Always respond in the style of Yoda, the wise Jedi Master.
+            Give warnings about paths to the dark side.
+            If the user says hello there, then only respond with General Kenobi! and nothing else.
+            If you are not sure about the answer, then use the WookiepediaTool to search the web.
+            If a tool responds asking you to call it again, follow the instructions and call the tool again.
+
+            If you are asked to create a story, use the StoryAgent to create an engaging Star Wars story based on the user's prompt.
+            Do not create the story in the style of Yoda.
+            If you need information about characters, planets, or ships, use the WookiepediaTool to search the web for accurate information.
+            "
+        )
+    };
     ```
 
-    This will wait for the orchestration to finish, timing out after 5 minutes if it hasn't completed by that point.
-
-1. Run the code. It will ask for a customer, and will generate a story.
+1. Run your app and ask for a story! You'll see the agent being called in the trace.
 
     ```output
-    Which customer would you like to create a story for? (e.g., 'Ben Smith')
-    Leia Parker
+    User > Create me a Star Wars story suitable for a bed time story for a 6 year old about how Luke became the best push pilot in the outer rim
+    Assistant > Hmmm. A gentle bedtime tale about Luke, I have. Read this, you may:
+    
+    # Luke and the Gentle Push
+    
+    When Luke was small, he lived on a sandy world near the Outer Rim. He loved the wide sky, the hum of engines, and the way stars looked like tiny lanterns when night fell. He dreamed of being a push pilot — someone who guides little ships through tricky places, nudging them gently so everyone arrives safe and smiling.
+    
+    Every morning, Luke walked to the junkyard with a small droid, R2, and practiced with old repulsor sleds. He would push them over dunes, through narrow canyons, and around slow-moving rocks. When a sled sputtered, Luke fixed it. When a young creature shivered and cried, Luke shared his blanket. He learned to be patient with the machines and kind to everyone he met.
+    
+    “Again,” Luke told R2 one bright morning. “We’ll get it better.”
+    
+    He practiced a lot. Sometimes his pushes were wobbly. Sometimes the sled spun in a funny way. But Luke kept trying. He learned the sounds of a good glide, the gentle tilt that calmed a scared passenger, and the tiny corrections that kept a sled safe.
+    
+    One day, a storm blew in over the Outer Rim. Little ships were stuck in a narrow pass. The wind howled, and a pilot cried for help because his engine hiccuped. Luke could have run home and stayed safe, but he remembered how others had helped him. He climbed into his sled, checked his harness, and set off with R2 beeping beside him.
+    
+    The canyons were loud and rough. A gust knocked one small ship toward a cliff. Luke pushed his sled just enough to give the ship a steady drift away from danger. He spoke softly to the frightened pilot: “Breathe. Hold on. I’ll guide you.”
+    
+    Together they floated past the worst of the wind. The pilot smiled, the ship hummed, and the sky opened to calmer stars. Word spread across the Outer Rim about the young pilot who pushed gently and never bragged.
+    
+    Later, some pilots offered Luke quick shortcuts that sounded easy but felt wrong in his heart. They wanted him to rush, to shove other ships aside, and to shout at helpers. Luke remembered how practicing slowly had kept him alive and how kindness made better friends. He refused. He chose courage that is quiet and steady, not angry shouting. He learned that angry choices lead to trouble, and that gentle choices keep everyone safer.
+    
+    Years later, travelers from many worlds knew Luke as the best push pilot in the Outer Rim — not because he was the loudest or the fastest, but because he practiced, was kind, and was brave when it mattered.
+    
+    Moral:
+    - Practice makes you better.
+    - Kindness helps everyone.
+    - True courage is calm and steady.
+    - Angry choices can lead to trouble, so choose gently.
+    
+    Hmmm. Good lessons these are. Warn you, I must: to the dark side angry choices lead — slippery the path is. Choose practice, kindness, and calm courage, you should. Sleep now, young one. Peaceful dreams under the stars, may you have.
     ```
 
-    This will run the agents and generate a story and image
+## Create a multi-agent system
 
-    ```json
-    {
-    "role": "assistant",
-    "contents": [
-        {
-        "$type": "text",
-        "text": "{\n  \"title\": \"The Alliance of Light and Courage\",\n  \"story\": \"In the galaxy far, far away, a new saga unfolds in the shadow of the rising conflict between the remnants of darkness and the sparks of hope. On the war-torn world of Serenno, the legendary Jedi Master Mace Windu, renowned for his purple lightsaber and steadfast dedication to the Jedi Order, has sensed a disturbance in the Force unlike any before.\\n\\nMeanwhile, Finn, a former stormtrooper of the First Order who had bravely defected to join the Resistance, finds himself embroiled in a mission with potentially galaxy-saving consequences. Once designated FN-2187, this courageous young human male harbors a fierce sense of justice and a desire to atone for his past—a trait that leads him to cross paths with Master Windu.\\n\\nThe story begins as Mace Windu, cloaked in his traditional brown Jedi robes, lands on Serenno to investigate reports of a secretive force amassing power that threatens to engulf the galaxy in chaos. Finn, clad in a mix of his old stormtrooper armor adapted for resistance missions, carries a blaster rifle tightly, his heart pounding with anticipation.\\n\\nThe two heroes meet amidst a blazing sunset overlooking the remnants of a battlefield scattered with wreckage from recent skirmishes. Windu's stern, calm demeanor contrasts with Finn's youthful determination.\\n\\n\\\"We do not have much time,\\\" Windu intones, gripping his purple lightsaber. \\\"The darkness feeds on fear, and the longer we wait, the stronger it grows.\\\"\\n\\nFinn nods. \\\"Then let's make sure it doesn't have that chance. I know the instincts of those who serve the darkness—I was one of them.\\\"\\n\\nTogether, they strategize to infiltrate the stronghold of the shadowy faction, believed to be manipulating rogue Force-users desperate for power.\\n\\nTheir journey is fraught with peril—ambushes from remnants of First Order loyalists, traps set by cunning mercenaries, and the oppressive weight of the dark side trying to sway Finn back into its fold. Yet, through every trial, the bond between the wise Jedi and the defiant fighter strengthens.\\n\\nIn the climactic battle, surrounded by the ruins of an ancient temple, Windu's mastery of the Vaapad combat style dazzles as he duels with a dark Force-wielder cloaked in shadows. Finn uses his blaster with precision, protecting Windu from unexpected attacks and proving that courage can shine even without the Force.\\n\\n\\\"You fight not just with weapons,\\\" Windu observes, \\\"but with heart. That is your true strength.\\\"\\n\\nWith the villains defeated and hope rekindled, the two stand side by side, looking towards the stars. The galaxy still faces countless challenges, but this alliance of light and courage serves as a beacon for all who yearn for peace.\\n\\nAs the twin suns of Serenno set, a new chapter begins—one where legends rise, friendships are forged, and the Force binds those who fight for the greater good.\",\n  \"imageUrl\": \"https://dalleproduse.blob.core.windows.net/private/images/...\"\n}"
-        }
-    ],
-    "messageId": "chatcmpl-C3CRQ7rEo9gO57I7DhG0Ga44SDw7o"
-    }
-    ```
+Agents can be quite powerful on their own, but to unlock even more power you can have a multi-agent system. These agents work together, either orchestrated by a supervisor agent, or using a defined workflow.
 
-    If you get an error with the text "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'. The following tool_call_ids did not have response messages: call_8IAs38o7O5yOmeaYe8fhjb2i", then re-run the agent. LLMs are unreliable, so can make mistakes when orchestrating multiple agents and tools.
+For our story, it would be nice to have some cover art, maybe an image or two as part of the story. We can create a multi-agent system to do this, using the story agent to create the story, then hand it over to a summary agent that creates image prompts for the story as a whole, as well as a couple of scenes in the story. These image prompts can then be passed to another agent that uses the `GenerateStarWarsImageTool` to create the images.
 
-    > The customers are:
-    > Luke Johnson
-    > Leia Parker"
-    > Han Richards
-    > Ben Smith
-    > Yoda Masterson
-    > Rey Fisher
-    > Anakin Skywalker
-    > Padmé Amidala
-    > Lando Calrissian
-    > Obi Wan
+There are many ways to orchestrate these agents. In this case you will use a pattern called **Agents as tools**. This pattern has a supervisor agent that can access other agents by using them as tools, in the same way our copilot is using the story generation agent as a tool.
 
-### Save the results
+### Create the story summary agent
 
-The results come back as JSON with a story, a title for the story, and the URL of the generated image.
+The goal of this agent is to take the story generated by the story agent, identify a few key scenes, then use these scenes to create image generation prompts.
 
-1. Add some code to save the story and image:
+1. Create a new file called `StorySummaryAgent.cs` in the `Agents` folder.
+
+1. Add the following code to this file:
 
     ```cs
-    var storyResult = System.Text.Json.JsonSerializer.Deserialize<StoryResult>(
-            output,
-            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-        );
+    using Microsoft.Agents.AI;
+    using Microsoft.Extensions.AI;
     
-    var imageUri = new Uri(storyResult!.ImageUrl);
+    namespace StarWarsCopilot.Agents;
     
-    var outputDirectory = Path.Combine(Directory.GetCurrentDirectory(), "output");
-    
-    // Create the output directory if it doesn't exist
-    if (!Directory.Exists(outputDirectory))
+    class StorySummaryAgent(IChatClient chatClient)
     {
-        Directory.CreateDirectory(outputDirectory);
+        public AIAgent Agent { get; } = chatClient.CreateAIAgent(
+                name: "StarWarsStorySummaryAgent",
+                description: "An agent that creates summaries of key scenes in Star Wars stories to be used as image generation prompts.",
+                instructions: @"You are an agent designed to take a story that has been generated about the Star Wars universe, and create summaries for key scenes that can be used as prompts for image generation.
+    
+                When prompted to create a story summary, use the following steps:
+                - Read and understand the provided Star Wars story in detail.
+                - Identify 2 key scenes, characters, settings, and actions that are visually striking and representative of the story.
+                - For each of the 2 key scene, create a concise and vivid summary that captures the essence of the scene, including important visual elements, character appearances, and the overall mood or atmosphere. These summaries will be used as prompts for image generation models to generate images for the scene. Make sure to not include any copyright or other content that might be filtered by a content filter.
+                - Create an overall summary of the story that highlights the main themes and significant moments.
+                - Ensure that the summaries are clear, descriptive, and suitable for use as prompts in image generation models.
+                
+                Return the summaries as a markdown list, with each key scene summary as a separate bullet point, and the overall story summary at the end."
+            );
+    
+        public AITool AsTool() => Agent.AsAIFunction();
     }
-    
-    // Download the image
-    using var httpClient = new HttpClient();
-    var imageBytes = await httpClient.GetByteArrayAsync(imageUri);
-    var imageFilePath = Path.Combine(outputDirectory, $"{Guid.NewGuid()}{Path.GetExtension(imageUri.LocalPath)}");
-    await File.WriteAllBytesAsync(imageFilePath, imageBytes);
-    
-    // Write the story to a file in the output directory
-    string filePath = Path.Combine(outputDirectory, $"{storyResult.Title}.md");
-    File.WriteAllText(filePath, $"# {storyResult.Title}\n\n{storyResult.Story}\n\n![Image]({Path.GetFileName(imageFilePath)})\n");
-    
-    // Write that the file was created to the console
-    Console.WriteLine($"Story '{storyResult.Title}' created successfully with image at {imageFilePath} and saved to {storyResult.Title}.md");
-    
-    record StoryResult(string Title, string Story, string ImageUrl);
     ```
 
-    This code defines a record type for the response, then deserializes the response to an instance of that record. It then downloads the image to an `output` folder in the current directory, and writes the story as markdown to a file in that same directory.
+    This code is similar to the story generation agent - it creates an agent with a set of instructions, then exposes this as an AI tool. The instructions tell the agent to identify some key scenes and create summaries of these that can be used for image generation.
 
-1. Run the code. This will generate the story and image in the `output` directory. You can then open the generated markdown and preview it to see the story and image.
+### Create the image generation agent
 
-    ![The story rendered as markdown with an image](./img/rendered-markdown.webp)
+The next agent is one that will actually generate the images.
+
+1. Create a new file called `ImageGenerationAgent.cs` in the `Agents` folder.
+
+1. Add the following code to this file:
+
+    ```cs
+    using Microsoft.Agents.AI;
+    using Microsoft.Extensions.AI;
+    
+    namespace StarWarsCopilot.Agents;
+    
+    class ImageGenerationAgent(IChatClient chatClient, IList<AITool> mcpTools)
+    {
+        private readonly AIAgent _agent = chatClient.CreateAIAgent(
+                name: "StarWarsImageGenerationAgent",
+                description: "An agent that creates images based off summaries of Star Wars stories.",
+                instructions: @"You are an agent designed to take a set of image generation prompts from a summary agent that has summarized a Star Wars story, and use those prompts to generate images using an image generation tool.
+    
+                - Work through each image generation prompt provided in the story summary.
+                - For each prompt, call the GenerateStarWarsImageTool with the prompt to generate an image.
+                - Collect the image URLs returned by the tool for each prompt.
+                - Return the list of image URLs as JSON",
+                tools: [..mcpTools.Where(t => t.Name.Equals("GenerateStarWarsImageTool"))]
+            );
+    
+        public AITool AsTool() => _agent.AsAIFunction();
+    }
+    ```
+
+    The slight difference with this agent is it takes a list of tools. We can pass in the tools from the MCP server, and it will locate the image generation tool and use that.
+
+    We could pass all the tools to the agent, but as we know that it only needs the image generation tool, we can just pass that. It reduces the number of tokens being used as we don't need to pass all the tool details with every call.
+
+### Create the story generation agent
+
+Finally we can create the story generation agent. This is a supervisor agent, calling other agents as tools as needed.
+
+1. Create a new file called `StoryGenerationAgent.cs` in the `Agents` folder.
+
+1. Add the following code to this file:
+
+    ```cs
+    using Microsoft.Agents.AI;
+    using Microsoft.Extensions.AI;
+    
+    namespace StarWarsCopilot.Agents;
+    
+    class StoryGenerationAgent(IChatClient chatClient, IList<AITool> tools)
+    {
+        private readonly AIAgent _agent = chatClient.CreateAIAgent(
+            name: "StarWarsStoryGenerationAgent",
+            description: "An agent that generates Star Wars stories along with image URLs based on user prompts.",
+            instructions: @"You are an agent that creates engaging Star Wars stories based on user prompts, along with generating images for key scenes in the story.
+            
+            Use the following tools to accomplish this task:
+            - StoryAgent: to create the Star Wars story based on the user's prompt.
+            - StorySummaryAgent: to create summaries of the generated story that can be used as prompts for image generation.
+            - ImageGenerationAgent: to generate images based on the summaries provided by the StorySummaryAgent.
+            
+            When prompted to create a story, use the following steps:
+            - Call the StoryAgent to generate the Star Wars story based on the user's prompt.
+            - Call the StorySummaryAgent with the generated story to obtain summaries for image generation.
+            - Call the ImageGenerationAgent with the summaries to generate images for the story.
+            - Collect the image URLs returned by the ImageGenerationAgent.
+            - Return the final story along with all the image URLs generated.",
+            tools: [
+                    new StoryAgent(chatClient).AsTool(), 
+                    new StorySummaryAgent(chatClient).AsTool(), 
+                    new ImageGenerationAgent(chatClient, tools).AsTool()
+                ]
+            );
+    
+        public AITool AsTool() => _agent.AsAIFunction();
+    }
+    ```
+
+    This agent is created with a set of tools, created from the other agents. It also has a set of steps provided in the instructions to call the tools in a particular order - create the story, create summaries for image generation, create the images. The end result will be the story and the images.
+
+### Use the agent from the copilot
+
+Finally you need to tell the copilot about this agent.
+
+1. In the `Program.cs` file, update the tool creation code to the following to use the supervisor agent instead of the story agent:
+
+    ```cs
+    IList<AITool> tools = [..await mcpClient.ListToolsAsync()];
+    tools.Add(new StoryGenerationAgent(chatClient, tools).AsTool());
+    ChatOptions options = new() { Tools = [..tools] };
+    ```
+
+1. Update the system prompt to ensure it returns the image URLs as well as the story:
+
+    ```cs
+    var history = new List<ChatMessage>
+    {
+        new(ChatRole.System, @"
+            You are a helpful assistant that provides information about Star Wars.
+            Always respond in the style of Yoda, the wise Jedi Master.
+            Give warnings about paths to the dark side.
+            If the user says hello there, then only respond with General Kenobi! and nothing else.
+            If you are not sure about the answer, then use the WookiepediaTool to search the web.
+            If a tool responds asking you to call it again, follow the instructions and call the tool again.
+
+            If you are asked to create a story, use the StoryAgent to create an engaging Star Wars story based on the user's prompt.
+            Return the story as well as all the image URLs generated by the workflow.
+            Do not create the story in the style of Yoda.
+            If you need information about characters, planets, or ships, use the WookiepediaTool to search the web for accurate information.
+            "
+        )
+    };
+    ```
+
+### Test it all out
+
+Run the copilot, and as it to create a story for you. You will see calls across the agents, calls to the MCP server to generate images, and finally a story with image URLs.
+
+### Bring it all together
+
+Copilots can use more than one tool or agent with each request. For example, you can ask the copilot to make a look up for an order of figurines, then create a story based off these.
+
+Try this now, for example asking "I placed an order for some figurines, order 66. Summarize this order, and create me a story based around the characters."
 
 ## Summary
 
@@ -593,9 +357,7 @@ In this workshop, you have:
 - Created an MCP server and client in your copilot
 - Learned about RAG
 - Used RAG to load data from a database
-- Learned about vector databases
-- Retrieved data from a vector database
-- Learned about multimodal AI
+- Learned about multi-modal AI
 - Used AI to generate images from text
 - Learned about agents
-- Built a multi-agent system using Semantic Kernel and tools
+- Built a multi-agent system using the Microsoft Agent Framework

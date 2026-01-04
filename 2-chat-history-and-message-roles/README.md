@@ -121,10 +121,10 @@ There are more types of messages. One very important one is the **System Prompt*
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System, """
+        new(ChatRole.System, @"
             Always respond with the most succinct answer possible.
             For example, reply with one word or a short phrase when appropriate.
-            """
+            "
         )
     };
     ```
@@ -157,14 +157,17 @@ Now that we have a chat tool that we can tweak to work the way we want via the s
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System, """
+        new(ChatRole.System, @"
             You are a helpful assistant that provides information about Star Wars.
             Always respond in the style of Yoda, the wise Jedi Master.
             Give warnings about paths to the dark side.
-            """
+            "
         )
     };
     ```
+
+    Feel free to replace Yoda with your favorite Star Wars character that has a distinctive style of speech, such as Jar Jar Binks.
+
 
 1. Run your app and ask the same question. This time, in the style of Yoda, the answer will be.
 
@@ -183,12 +186,12 @@ Now that we have a chat tool that we can tweak to work the way we want via the s
     ```cs
     var history = new List<ChatMessage>
     {
-        new(ChatRole.System, """
+        new(ChatRole.System, @"
             You are a helpful assistant that provides information about Star Wars.
             Always respond in the style of Yoda, the wise Jedi Master.
             Give warnings about paths to the dark side.
             If the user says hello there, then only respond with General Kenobi! and nothing else.
-            """
+            "
         )
     };
     ```

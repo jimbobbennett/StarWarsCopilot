@@ -208,13 +208,13 @@ public static class StarWarsTools
             {
                 return JsonSerializer.Serialize(new
                 {
-                    error = """
+                    error = @"
                     A content error occurred while generating the image.
                     Please retry this tool with an adjusted prompt, such as changing named characters to very detailed
                     descriptions of the characters. Include details like race, gender, age, dress style, distinguishing features
                     (e.g., 'an old, small, green Jedi Master with pointy ears, a tuft of white hair and wrinkles' instead of 'Yoda').
                     If the description contains anything sexual or violent, replace with a more PG version of the description.
-                    """
+                    "
                 });
             }
             

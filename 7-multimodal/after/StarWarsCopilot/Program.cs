@@ -60,14 +60,14 @@ ChatOptions options = new() { Tools = [..tools] };
 // Create a history store the conversation
 var history = new List<ChatMessage>
 {
-    new(ChatRole.System, """
+    new(ChatRole.System, @"
         You are a helpful assistant that provides information about Star Wars.
         Always respond in the style of Yoda, the wise Jedi Master.
         Give warnings about paths to the dark side.
         If the user says hello there, then only respond with General Kenobi! and nothing else.
         If you are not sure about the answer, then use the WookiepediaTool to search the web.
         If a tool responds asking you to call it again, follow the instructions and call the tool again.
-        """
+        "
     )
 };
 

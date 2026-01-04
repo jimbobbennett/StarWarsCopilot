@@ -32,7 +32,7 @@ This repo has the following structure:
 1. [Tool calling](./4-call-tools/README.md)
 1. [MCP - Model Context Protocol](./5-mcp/README.md)
 1. [RAG](./6-rag/README.md)
-1. [Multimodal AI](./7-multimodal/README.md)
+1. [Multi-modal AI](./7-multimodal/README.md)
 1. [Agents](./8-agents/)
 
 Each lesson has an after folder containing all the code from the lesson. If you need to, start by using the after code from the previous lesson and build upon it.
