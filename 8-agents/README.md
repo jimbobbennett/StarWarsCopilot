@@ -1,8 +1,8 @@
 # Agents
 
-In the [previous part](../7-multimodal/README.md) you learned about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
+In the [previous lesson](../7-multimodal/README.md) you learned about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
 
-In this part you will learn:
+In this lesson you will learn:
 
 - Agents vs copilots
 - How to create an agent using the Microsoft Agent Framework

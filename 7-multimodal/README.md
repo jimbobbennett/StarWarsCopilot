@@ -1,8 +1,8 @@
 # Multi-modal AI
 
-In the [previous part](../6-rag/README.md) you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
+In the [previous lesson](../6-rag/README.md) you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
 
-In this part you will learn:
+In this lesson you will learn:
 
 - What are the multi-modal capabilities of AI models
 - How to add a tool to generate images from text
@@ -11,7 +11,7 @@ In this part you will learn:
 
 ## Multi-modal capabilities of AI models
 
-In the previous parts of this workshop, you focused on text generation using text prompts. There are AI models that also support other modalities of inputs and outputs. This includes:
+In the previous lessons of this workshop, you focused on text generation using text prompts. There are AI models that also support other modalities of inputs and outputs. This includes:
 
 - Taking an image as a prompt and returning text
 - Taking text as a prompt and returning an image
@@ -323,6 +323,6 @@ This is followed by the updated tool call:
 
 ## Summary
 
-In this part you learned about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
+In this lesson you learned about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
 
-In the [next part](../8-agents/README.md) you will learn how to create agents using the Microsoft Agent Framework to connect all our capabilities and tools.
+In the [next lesson](../8-agents/README.md) you will learn how to create agents using the Microsoft Agent Framework to connect all our capabilities and tools.

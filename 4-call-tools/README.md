@@ -1,8 +1,8 @@
 # Tool calling
 
-In the [previous part](../3-llm-choice/README.md) you connected different LLMs to your copilot, including running a model locally.
+In the [previous lesson](../3-llm-choice/README.md) you connected different LLMs to your copilot, including running a model locally.
 
-In this part you will learn how to:
+In this lesson you will learn how to:
 
 - Define tools
 - Add tools to your copilot
@@ -504,6 +504,6 @@ It's this last response we save to the chat history.
 
 ## Summary
 
-In this part you learned how to call tools to expand the knowledge of your copilot.
+In this lesson you learned how to call tools to expand the knowledge of your copilot.
 
-In the [next part](../5-mcp/README.md) you will learn all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
+In the [next lesson](../5-mcp/README.md) you will learn all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.

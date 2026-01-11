@@ -1,6 +1,6 @@
 # MCP - Model Context Protocol
 
-In the [previous part](../4-call-tools/README.md) you learned how to call tools to expand the knowledge of your copilot.
+In the [previous lesson](../4-call-tools/README.md) you learned how to call tools to expand the knowledge of your copilot.
 
 In this you will learn:
 
@@ -10,7 +10,7 @@ In this you will learn:
 
 ## What is MCP?
 
-In the previous part you defined a tool using code that the LLM could call. You were writing code to wrap an API in the format needed by `Microsoft.Extensions.AI` so that the LLM could call the tool. If we want to add more tools, we have to keep writing code to wrap different APIs or to call different services.
+In the previous lesson you defined a tool using code that the LLM could call. You were writing code to wrap an API in the format needed by `Microsoft.Extensions.AI` so that the LLM could call the tool. If we want to add more tools, we have to keep writing code to wrap different APIs or to call different services.
 
 This becomes a lot of work if we have a lot of tools. Different LLMs also have different ways to call tools. If we have to write code for each tool, then it becomes hard to register new tools at run time.
 
@@ -344,6 +344,6 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
 
 ## Summary
 
-In this part you learned all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
+In this lesson you learned all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
 
-In the [next part](../6-rag/README.md), you will learn about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
+In the [next lesson](../6-rag/README.md), you will learn about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.

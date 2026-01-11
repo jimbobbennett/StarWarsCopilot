@@ -1,6 +1,6 @@
 # RAG
 
-In the [previous part](../5-mcp/README.md) you learned all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
+In the [previous lesson](../5-mcp/README.md) you learned all about MCP as a standard for tool calling and reusable tools, and convert your Wookiepedia tool to an MCP server.
 
 In this you will learn:
 
@@ -288,6 +288,6 @@ The Copilot now knows about purchases of Star Wars figurines, and when you ask a
 
 ## Summary
 
-In this part you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
+In this lesson you learned about Retrieval-Augmented generation (RAG) for retrieving information for the LLM to use.
 
-In the [next part](../7-multimodal/README.md) you will learn about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
+In the [next lesson](../7-multimodal/README.md) you will learn about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.

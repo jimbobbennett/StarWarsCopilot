@@ -56,5 +56,5 @@ while (true)
     history.Add(new ChatMessage(ChatRole.Assistant, result.Messages.Last()?.Text ?? string.Empty));
 
     // Print the results
-    Console.WriteLine("Assistant > " + result);
+    Console.WriteLine("Assistant > " + result.Messages.Last()?.Text);
 }

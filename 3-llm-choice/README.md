@@ -1,15 +1,15 @@
 # LLM Choice
 
-In the [previous part](../2-chat-history-and-message-roles/README.md) you added chat history to your copilot app. Once you had a chat history, you were able to set a system prompt to convert your copilot app to a Star Wars copilot, responding in the style of Yoda.
+In the [previous lesson](../2-chat-history-and-message-roles/README.md) you added chat history to your copilot app. Once you had a chat history, you were able to set a system prompt to convert your copilot app to a Star Wars copilot, responding in the style of Yoda.
 
-In this part you will learn how to:
+In this lesson you will learn how to:
 
 - Connect to different models using the Azure AI Inference SDK
 - Connect to local models using AI Foundry Local
 
 ## Microsoft.Extensions.AI
 
-In the previous part you connected to an OpenAI model running on Microsoft Foundry using an `AzureOpenAIClient`. This client lets you connect to any model that supports the OpenAI API standard running on Azure.
+In the previous lesson you connected to an OpenAI model running on Microsoft Foundry using an `AzureOpenAIClient`. This client lets you connect to any model that supports the OpenAI API standard running on Azure.
 
 There are many different APIs for interacting with LLMs, depending on the platform. These are basically the same style of API - you connect to an LLM and send a chat history, but they are all subtly different, requiring different APIs and SDKs.
 
@@ -200,6 +200,6 @@ You can interact with models on Foundry Local using the OpenAI SDK.
 
 ## Summary
 
-In this part you connected different LLMs to your copilot, including running a model locally.
+In this lesson you connected different LLMs to your copilot, including running a model locally.
 
-In the [next part](../4-call-tools/README.md) you will learn how to call tools to expand the knowledge of your copilot.
+In the [next lesson](../4-call-tools/README.md) you will learn how to call tools to expand the knowledge of your copilot.

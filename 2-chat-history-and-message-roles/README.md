@@ -1,8 +1,8 @@
-# Part 2 - Chat History and Message Roles
+# Chat History and Message Roles
 
-In the [previous part](../1-chat-with-copilot/README.md) you created a simple C# app using `Microsoft.Extensions.AI` that interacted with an Azure OpenAI service LLM. When you interacted with the LLM you were able to ask individual questions, but follow up questions didn't work - the LLM had no idea about earlier questions and responses. In this part you will add chat history with different prompt types.
+In the [previous lesson](../1-chat-with-copilot/README.md) you created a simple C# app using `Microsoft.Extensions.AI` that interacted with an Azure OpenAI service LLM. When you interacted with the LLM you were able to ask individual questions, but follow up questions didn't work - the LLM had no idea about earlier questions and responses. In this lesson you will add chat history with different prompt types.
 
-In this part you will learn how to:
+In this lesson you will learn how to:
 
 - [Build chat history](#build-chat-history)
 - [Add a system prompt](#add-a-system-prompt)
@@ -10,7 +10,7 @@ In this part you will learn how to:
 
 ## Build chat history
 
-The reason the LLM is unable to tie one question back to a previous question is because LLMs have no concept of memory. LLMs are stateless. they don't retain any information about each interaction. The way that tools like ChatGPT allow you to have a back and forth conversation is they essentially fake it. Every interaction sends the chat history along with the latest question.
+The reason the LLM is unable to tie one question back to a previous question is because LLMs have no concept of state or memory. LLMs are stateless. they don't retain any information about each interaction. The way that tools like ChatGPT allow you to have a back and forth conversation is they essentially fake it. Every interaction sends the chat history along with the latest question.
 
 ### Add a chat history to your app
 
@@ -206,6 +206,6 @@ Now that we have a chat tool that we can tweak to work the way we want via the s
 
 ## Summary
 
-In this part you added chat history to your copilot app. Once you had a chat history, you were able to set a system prompt to convert your copilot app to a Star Wars copilot, responding in the style of Yoda.
+In this lesson you added chat history to your copilot app. Once you had a chat history, you were able to set a system prompt to convert your copilot app to a Star Wars copilot, responding in the style of Yoda.
 
-In the [next part](../3-llm-choice/README.md) you will learn more about the LLM you are using, and try running your app using a range of different LLMs, including offline using a local LLM.
+In the [next lesson](../3-llm-choice/README.md) you will learn more about the LLM you are using, and try running your app using a range of different LLMs, including offline using a local LLM.

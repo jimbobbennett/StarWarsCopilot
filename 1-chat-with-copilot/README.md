@@ -1,6 +1,6 @@
-# Part 1 - Chat With an LLM
+# Chat With an LLM
 
-In this part you will learn how to:
+In this lesson you will learn how to:
 
 - [Create a new C# project using Microsoft.Extensions.AI](#create-a-new-c-project-using-microsoftextensionsai)
 - [Connect to an LLM to send messages and get responses](#connect-to-an-llm-to-send-messages-and-get-responses)
@@ -29,6 +29,8 @@ In this section you will scaffold a new C# project using `Microsoft.Extensions.A
     dotnet add package Microsoft.Extensions.Logging --version 10.0.1
     dotnet add package Microsoft.Extensions.Logging.Console --version 10.0.1
     ```
+
+    > Some of these packages are prerelease, so install the exact versions defined here to ensure the code in this workshop matches the packages you are installing.
 
 ### Configure your secrets
 
@@ -111,7 +113,7 @@ Next you will need to load these secrets in your app
 
     ```output
     ➜  StarWarsCopilotNew dotnet run
-    Using model gpt-5-mini at endpoint https://openai-codemash.openai.azure.com/
+    Using model gpt-5-mini at endpoint https://starwarscopilot.openai.azure.com
     ```
 
 ### Scaffold the copilot project
@@ -161,14 +163,6 @@ The `Microsoft.Extensions.AI` library provides an `IChatClient` interface that y
 
     This adds logging, then builds a new `IChatClient` instance with logging.
 
-1. Run the project to ensure everything is set up correctly:
-
-    ```bash
-    dotnet run
-    ```
-
-    If everything is configured correctly, then your copilot app should run with no errors and do nothing.
-
 ## Connect to an LLM to send messages and get responses
 
 In the previous step, you configured an Azure OpenAI chat client. This client allows you to connect to an Azure OpenAI service, and get chat responses - essentially send a message and get a response, the same as when you are chatting with ChatGPT.
@@ -190,7 +184,7 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
         var result = await chatClient.GetResponseAsync(userInput);
 
         // Print the results
-        Console.WriteLine("Assistant > " + result);
+        Console.WriteLine("Assistant > " + result.Messages.Last()?.Text);
     }
     ```
 
@@ -203,7 +197,13 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
         C --> A
     ```
 
-1. Run the code to interact with the LLM. When prompted with `User >`, type your prompt, such as "What is the best Star Wars movie?" and press return. You will see some logging messages, and the response from the LLM. Press return on an empty input to end the program.
+1. Run the code to interact with the LLM.
+
+    ```bash
+    dotnet run
+    ```
+
+    When prompted with `User >`, type your prompt, such as "What is the best Star Wars movie?" and press return. You will see some logging messages, and the response from the LLM. Press return on an empty input to end the program.
 
     ```output
     ➜ dotnet run
@@ -278,6 +278,6 @@ In the previous step, you configured an Azure OpenAI chat client. This client al
 
 ## Summary
 
-In this part you created a new C# project using `Microsoft.Extensions.AI`, and connected it to an Azure OpenAI service LLM. You then ran your app and were able to send messages to the LLM and get responses.
+In this lesson you created a new C# project using `Microsoft.Extensions.AI`, and connected it to an Azure OpenAI service LLM. You then ran your app and were able to send messages to the LLM and get responses.
 
-Why didn't the LLM link the second question to the first? ChatGPT does this all the time. The answer is in chat history, and message roles and is covered in the [next part](../2-chat-history-and-message-roles/README.md).
+Why didn't the LLM link the second question to the first? ChatGPT does this all the time. The answer is in chat history, and message roles and is covered in the [next lesson](../2-chat-history-and-message-roles/README.md).

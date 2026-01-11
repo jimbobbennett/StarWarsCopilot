@@ -36,5 +36,5 @@ while (true)
     var result = await chatClient.GetResponseAsync(userInput);
 
     // Print the results
-    Console.WriteLine("Assistant > " + result);
+    Console.WriteLine("Assistant > " + result.Messages.Last()?.Text);
 }
