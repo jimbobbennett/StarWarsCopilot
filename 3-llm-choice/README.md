@@ -102,7 +102,7 @@ General Kenobi!
 
 ## Foundry Local
 
-> You will need a reasonably powerful macOS or Windows machine to run this section. Linux is currently not supported. Any Apple Silicon Mac will be fine, as will any Windows device with a modern NVIDIA or ARM GPU. Check out the [Foundry Local prerequisites](https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started#prerequisites) for more details on support.
+> You will need a reasonably powerful macOS or Windows machine to run this section. Linux is currently not supported. Any Apple Silicon Mac will be fine, as will any Windows device with a modern NVIDIA or ARM GPU, or an NPU from Intel or SnapDragon. Check out the [Foundry Local prerequisites](https://learn.microsoft.com/azure/ai-foundry/foundry-local/get-started#prerequisites) for more details on support.
 
 So far you have run your copilot using models deployed to the cloud, running on racks in datacenters full of GPUs. Whilst this allows you to take advantage of the power of the cloud, it is not very good for the planet, eating a lot of power and cooling, and pretty terrible if you are flying through hyperspace and your astromech can't connect to the internet.
 
@@ -124,7 +124,7 @@ Foundry Local is a tool for running AI models locally, taking advantage of your 
 
     ```bash
     foundry model run phi-4-mini
-    ``
+    ```
 
     This will start a simple chatbot, so ask the LLM a question to make sure it is running.
 
