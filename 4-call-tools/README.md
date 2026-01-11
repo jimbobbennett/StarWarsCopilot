@@ -73,9 +73,21 @@ To help our LLM have better knowledge, we can add a tool that can do a web searc
 
 Different LLMs have different capabilities when it comes to calling tools, so for the best response use the OpenAI model deployed to Microsoft Foundry. To do this:
 
-1. Uncomment the code to use the `AzureOpenAIClient`
+1. Uncomment the code to use the `AzureOpenAIClient`, and delete or comment out the code to initialize Foundry Local and create a client using the Foundry Local model, as well as the commented out code to use the `Azure.AI.Inference.ChatCompletionsClient`.
 
-1. Delete or comment out the code to initialize Foundry Local and create a client using the Foundry Local model, as well as the commented out code to use the `Azure.AI.Inference.ChatCompletionsClient`
+    The code to create the `IChatClient` should now be back to this:
+
+    ```cs
+    // Create the IChatClient
+    var client = new AzureOpenAIClient(new Uri(LLMOptions.Endpoint),
+                                       new ApiKeyCredential(LLMOptions.ApiKey));
+    
+    var innerClient = client.GetChatClient(LLMOptions.Model).AsIChatClient();
+    
+    var chatClient = new ChatClientBuilder(innerClient)
+                        .UseLogging(factory)
+                        .Build();
+    ```
 
 1. Revert the model being used back to GPT-5 mini:
 
@@ -132,7 +144,7 @@ Tavily is an API that needs a key. It has a generous free tier, or you can get a
 
 Tavily has a search API that takes a query and returns a list of response from that query that you can then send to your LLM.
 
-For example, if you call the API using `curl` like this:
+For example, if you call the API using `curl` like this replacing `****` with your API key:
 
 ```bash
 curl -X POST https://api.tavily.com/search \
@@ -320,7 +332,7 @@ These tools need to:
 
 Now the tool is ready, it can be used in our app.
 
-1. Change the `chatClient` build step to add tool calling by adding a call to `UseFunctionInvocation`:
+1. In the `Program.cs` file, change the `chatClient` build step to add tool calling by adding a call to `UseFunctionInvocation`:
 
     ```cs
     var chatClient = new ChatClientBuilder(innerClient)

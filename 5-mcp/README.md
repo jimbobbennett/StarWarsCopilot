@@ -76,8 +76,8 @@ There is an official C# MCP SDK supported by Microsoft that allows you to create
 1. Add NuGet packages to read configuration, and the C# MCP SDK:
 
     ```bash
-    dotnet add package Microsoft.Extensions.Hosting
-    dotnet add package ModelContextProtocol --prerelease
+    dotnet add package Microsoft.Extensions.Hosting --version 10.0.1
+    dotnet add package ModelContextProtocol --version 0.5.0-preview.1
     ```
 
 1. Initialize the .NET secrets manager
@@ -102,11 +102,16 @@ There is an official C# MCP SDK supported by Microsoft that allows you to create
 
 ### Set up the MCP server
 
-There are 2 ways for an MCP client to communicate with an MCP server - stdio or streamable HTTP. Stdio servers are processes that are launched by the MCP client, and they communicate over stdio - so over standard input and output, essentially sending and receiving JSON via the same protocol as `Console.ReadLine` and `Console.WriteLine`. Streamable HTTP servers are servers that are already running, and you stream data in and out over HTTP. Stdio is great for launching processes locally, and is generally the easiest. Streaming HTTP is used for persistent servers, such as those running over the internet.
+There are 2 ways for an MCP client to communicate with an MCP server - stdio or streamable HTTP.
+
+- Stdio servers are processes that are launched by the MCP client, and they communicate over stdio - so over standard input and output, essentially sending and receiving JSON via the same protocol as `Console.ReadLine` and `Console.WriteLine`.
+- Streamable HTTP servers are servers that are already running, and you stream data in and out over HTTP.
+
+Stdio is great for launching processes locally, and is generally the easiest. Streaming HTTP is used for persistent servers, such as those running over the internet.
 
 We are going to use stdio as it is easiest.
 
-1. Replace the code in `Program.cs` with the following:
+1. In the `StarWarsMCPServer`, replace the code in `Program.cs` with the following:
 
     ```cs
     using Microsoft.Extensions.DependencyInjection;
@@ -128,7 +133,9 @@ We are going to use stdio as it is easiest.
     await builder.Build().RunAsync();
     ```
 
-    This is the core of your MCP server - it creates an application builder with console logging, logging everything trace and above to stderr. The reason it uses stderr for everything is that you can't log anything to stdout as you would normally do. Stdout is used to get responses from the MCP server, so anything that is not a response to a call to the MCP server has to be sent to stderr, otherwise the MCP client will fail to understand it and throw errors.
+    This is the core of your MCP server - it creates an application builder with console logging, logging everything trace and above to stderr.
+
+    The reason it uses stderr for everything is that you can't log anything to stdout as you would normally do. Stdout is used to get responses from the MCP server, so anything that is not a response to a call to the MCP server has to be sent to stderr, otherwise the MCP client will fail to understand it and throw errors.
 
     It then adds 3 MCP services:
 
@@ -225,7 +232,7 @@ This is all the code you need for the MCP server, so let's test it using the MCP
 
     ![The inspector showing it is connected](./img/inspector-connected.webp)
 
-    You will see the logs from the MCP server in the _Error output from the MCP Server_ section. Don't worry about these, they are not errors, just info logs, but we have to use stderr for any logging.
+    You may see the logs from the MCP server in the _Error output from the MCP Server_ section. Don't worry about these, they are not errors, just info logs, but we have to use stderr for any logging.
 
 1. Ensure **Tools** is selected in the top menu, then select the **List Tools** button to see the tools:
 
@@ -246,7 +253,7 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
 1. Add the MCP SDK to this project:
 
     ```cs
-    dotnet add package ModelContextProtocol --prerelease
+    dotnet add package ModelContextProtocol --version 0.5.0-preview.1
     ```
 
 1. Comment out or delete the `WookiepediaTool` and `ToolsOptions` - you won't need this anymore as we are using the MCP server.
@@ -290,8 +297,8 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
         Arguments = MCPServerOptions.Arguments,
     }, loggerFactory: factory);
     
-    await using var mcpClient = await McpClientFactory.CreateAsync(clientTransport,
-                                                                   loggerFactory: factory);
+    await using var mcpClient = await McpClient.CreateAsync(clientTransport,
+                                                            loggerFactory: factory);
     ```
 
     This code creates a client transport over stdio with the command and arguments defined in your app settings, and uses this to create an MCP client. It also passes our logger factor to the create call to log the MCP interactions
