@@ -54,7 +54,7 @@ var clientTransport = new StdioClientTransport(new()
 await using var mcpClient = await McpClient.CreateAsync(clientTransport,
                                                         loggerFactory: factory);
                                                                 
-var tools = await mcpClient.ListToolsAsync();
+IList<AITool> tools = [..await mcpClient.ListToolsAsync()];
 ChatOptions options = new() { Tools = [..tools] };
 
 // Create a history store the conversation

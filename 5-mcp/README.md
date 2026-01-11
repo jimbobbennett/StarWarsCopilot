@@ -306,7 +306,7 @@ Now we have our server, we can call it from our copilot by adding an MCP client 
 1. After this, load the tools from the MCP client and set these on the chat options. These tools are loaded in a compatible way for the chat options, so can be added to an array and passed to the options.
 
     ```cs
-    var tools = await mcpClient.ListToolsAsync();
+    IList<AITool> tools = [..await mcpClient.ListToolsAsync()];
     ChatOptions options = new() { Tools = [..tools] };
     ```
 

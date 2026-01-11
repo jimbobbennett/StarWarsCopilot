@@ -2,7 +2,7 @@
 
 In the [previous lesson](../7-multimodal/README.md) you learned about using multi-modal AI, and add a tool that uses AI to generate images from a text prompt.
 
-In this lesson you will learn:
+In this final lesson you will learn:
 
 - Agents vs copilots
 - How to create an agent using the Microsoft Agent Framework
@@ -12,18 +12,18 @@ In this lesson you will learn:
 
 A copilot is an AI-powered assistant, designed to sit with you and provide you with information, driven by a chat-based user interaction. Copilots are generic, supporting a wide range of tasks.
 
-Agents are specialized applications that perform specific tasks. They are powered by AI, can use tools, and have instructions that guide what the agent can do. Agents are lit 🔥:
+Agents are specialized applications that perform specific tasks. They are powered by AI, can use tools, and have instructions that guide what the agent can do. Agents are **lit** 🔥:
 
-**L** - They are powered by LLMs
-**I** - They have instructions, essentially the system prompt
-**T** - They use tools
+- **L** - They are powered by LLMs
+- **I** - They have instructions, essentially the system prompt
+- **T** - They use tools
 
 > Blame [Dona Sarkar from Microsoft](https://www.linkedin.com/in/donasarkar/) for this...
 
 You can think of the division this way:
 
 - The copilot is the chat interface that uses an LLM and tools to provide you with help and guidance
-- Agents are LLM powered tools that can be triggered in multiple ways, one of which is via a copilot
+- Agents are LLM powered components or applications that can be triggered in multiple ways, one of which is via a copilot
 
 Agents can operate as part of the conversation, or can operate independently, triggered by the user or by another trigger, making decisions on what to do, then acting on those decisions.
 
@@ -41,7 +41,7 @@ Later in this lesson you'll convert this to a multi-agent system that also creat
 
 ### Create the story agent class
 
-Open the `StarWarsCopilot` project.
+1. Open the `StarWarsCopilot` project. The agent will be built directly into the copilot, instead of being exposed as an MCP tool.
 
 1. Install the Microsoft Agent Framework with OpenAI support NuGet package.
 
