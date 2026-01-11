@@ -93,7 +93,7 @@ The tool we will be adding can load details from the tables using one or more co
 1. Add the `Azure.Data.Tables` NuGet package so that your tool can interact with Azure Storage tables:
 
     ```bash
-    dotnet add package Azure.Data.Tables
+    dotnet add package Azure.Data.Tables --version 12.11.0
     ```
 
 1. Add a using directive for this package to the top of the `StarWarsTools` class:

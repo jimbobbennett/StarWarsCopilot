@@ -77,7 +77,7 @@ First you need to configure the MCP server to connect to the image generation mo
 1. Install the Azure OpenAI NuGet package:
 
     ```bash
-    dotnet add package Azure.AI.OpenAI
+    dotnet add package Azure.AI.OpenAI --version 2.1.0
     ```
 
 1. Add a using directive for this package to the top of the `StarWarsTools` class:
@@ -88,7 +88,7 @@ First you need to configure the MCP server to connect to the image generation mo
     using OpenAI.Images;
     ```
 
-1. Add a new static function for the tool:
+1. Add a new static function for the tool to the `StarWarsTools` class:
 
     ```cs
     [McpServerTool(Name = "GenerateStarWarsImageTool"),
