@@ -14,7 +14,7 @@ The reason the LLM is unable to tie one question back to a previous question is 
 
 ### Add a chat history to your app
 
-1. Add the following code before the `while` loop in your `StarWarsCopilot` to create a chat history:
+1. Add the following code **before** the `while` loop in your `StarWarsCopilot` to create a chat history:
 
     ```cs
     // Create a history store the conversation
@@ -73,7 +73,7 @@ The reason the LLM is unable to tie one question back to a previous question is 
     }
     ```
 
-    The result can have multiple messages, so we want the last one. We'll see what other messages might be there in a later part.
+    The result can have multiple messages, so we want the last one. We'll see what other messages might be there in a later lesson.
 
 1. Run your code and ask the same two questions. This time, the answer to the second will take into consideration the first (the logging is not showing here).
 

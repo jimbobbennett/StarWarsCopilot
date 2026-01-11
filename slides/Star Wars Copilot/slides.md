@@ -37,11 +37,6 @@ Welcome to this workshop!
 
 ---
 layout: image
-image: /kcdc25_sponsorslide.jpeg
----
-
----
-layout: image
 image: /hello-there.gif
 backgroundSize: contain
 ---
@@ -80,7 +75,7 @@ This workshop is all about building a Star Wars copilot in C#
 
 To complete this workshop, you will need:
 
-- The .NET 9 SDK
+- The .NET 10 SDK
 - A basic understanding of C#
 - Your preferred .NET IDE
 - Node
@@ -90,7 +85,7 @@ To complete this workshop, you will need:
 
 # What we will cover
 
-This workshop has 9 sections, covering:
+This workshop has 8 sections, covering:
 
 <v-clicks>
 
@@ -100,8 +95,7 @@ This workshop has 9 sections, covering:
 - Tools
 - MCP
 - RAG
-- Vector databases
-- Multimodal AI
+- Multi-modal AI
 - Agents
 
 </v-clicks>
@@ -125,7 +119,7 @@ github.com/jimbobbennett/StarWarsCopilot
 You can find API keys and endpoints here:
 
 ```
-https://tr.ee/ABN6pl
+tr.ee/ABN6pl
 ```
 
 <!--
@@ -136,6 +130,18 @@ Also I've provided access to some LLMs, and the endpoints and API keys are in th
 I'll be cleaning these up at the end of the workshop
 
 -->
+
+---
+layout: center
+---
+
+# github.com/jimbobbennett/StarWarsCopilot
+
+---
+layout: center
+---
+
+# tr.ee/ABN6pl
 
 ---
 
@@ -185,6 +191,12 @@ Copilots are different to chat tools
 -->
 
 ---
+
+# Copilot vs Agents
+
+A copilot is the UI you can use to access AI for a specific purpose, including LLMs, tools, and agents.
+
+---
 layout: image-right
 image: /r2d2.jpg
 ---
@@ -193,12 +205,12 @@ image: /r2d2.jpg
 
 Today you are building a Star Wars copilot!
 
-This workshop has 9 sections.
+This workshop has 8 sections.
 
 The structure is:
 
 - 5 minutes of relevant information
-- 20 minutes to work through each section
+- 25 minutes to work through each section
 
 Each lesson is linked in the README.
 
@@ -210,7 +222,7 @@ If you need it, each lesson has an `after` folder with the final code, which you
 
 In this lesson you will create a C# application to chat with an LLM.
 
-You will be using GPT 4o Mini deployed to Microsoft Foundry.
+You will be using GPT-5 Mini deployed to Microsoft Foundry.
 
 <!--
 
@@ -218,7 +230,7 @@ Anyone created a simple chat app before?
 
 In this lesson you will create a basic chat app where you can prompt an LLM.
 
-This will use GPT 4o Mini, which I've already deployed for you to Microsoft Foundry, which is Microsoft's AI platform. The endpoint and API key are in the Gist I linked earlier
+This will use GPT 5 Mini, which I've already deployed for you to Microsoft Foundry, which is Microsoft's AI platform. The endpoint and API key are in the Gist I linked earlier
 
 -->
 
@@ -502,58 +514,7 @@ This means you can search for purchases by Ben Smith, or order 66
 
 ---
 
-# 7. Vector databases
-
-In this lesson you will create a vector database and upload the scripts to Star Wars movies to it, then search it from another tool.
-
-<!--
-
-The RAG tool is case sensitive, matching the name only if the case matches. It can also only match on the full name.
-
-This is a problem with natural language interactions with databases - the terms users use may not be the same as the data so you get searches that fail. Users are used to being understood rather than having to search by exact keywords.
-
-The way round this is vector databases!
-
-You will need to create a Pine
-
--->
-
----
-layout: center
----
-
-# Go!
-
----
-
-# Review
-
-In this lesson you:
-
-<v-clicks>
-
-- Created a vector database in Pinecone
-- Uploaded chunks from Star Wars movie scripts
-- Created an MCP tool to load data from a database
-- Defined values for one of the tool parameters
-- Used the tool to search by semantic similarity
-- Combined multiple tools in a copilot interaction
-
-</v-clicks>
-
-<!--
-
-The vector database allows you to search by semantic similarity, matching terms by similarity allowing for a more natural search.
-
-You also defined a set of values for a parameter, essentially turning a string parameter into an enum, as the LLM will use this to only pass the allowed values.
-
-The copilot can use many tools at once, so will use one tool to get data, then another tool using that data.
-
--->
-
----
-
-# 8. Multimodal AI
+# 7. Multimodal AI
 
 In this lesson you will generate images from text prompts, and deal with content filters.
 
@@ -603,17 +564,17 @@ The copilot can use many tools at once, so will use one tool to get data, then a
 
 ---
 
-# 9. Agents
+# 8. Agents
 
 In this final lesson, you will move away from a copilot, instead creating a multi-agent system bringing together all you have learned.
 
-You'll get to use Semantic Kernel as an orchestration framework.
+You'll get to use the Microsoft Agent Framework as an agentic framework.
 
 <!--
 
 Copilots are great, but agents are better! Agents are autonomous, triggered by different actions including chat prompts.
 
-You will use Semantic Kernel as an orchestration framework.
+You will use Microsoft Agent Framework as an orchestration framework.
 
 -->
 
@@ -631,24 +592,19 @@ In this lesson you:
 
 <v-clicks>
 
-- Created a new app using Semantic Kernel
-- Defined agents
-- Defined handoff rules in natural language
-- Used your agent to generate stories and images based of Star Wars figurine purchases
+- Created a new agent using Microsoft Agent Framework
+- Called your agent from your copilot
+- Created multiple agents and orchestrated them using the agents as tools pattern
+- Combined tools and agents from your copilot
 
 </v-clicks>
 
 <!--
 
-Semantic Kernel was great for planning tool calls and so on, but the SDKs now do a great job of this.
-
-Semantic Kernel is great for orchestrating agents however.
-
-You defined a set of agents - an LLM, a prompt, and tools
-Each agent does one job and autonomously decides what tools to call
-You can add some control by defining handoff rules to say which agent can handle which task
-
-You then put the agents together to extract information from RAG systems and internet searches, then create images and stories using tools.
+The Microsoft Agent framework allows you to define agents
+You can then call these agents from your copilot, typically as a tool
+Agents can work together, and there are many orchestration patterns for these, such as agents as tools, graphs, or workflows
+Your copilot can use multiple tools at once, such as gathering information from a tool and sending it to an agent
 
 -->
 
@@ -660,9 +616,9 @@ Remember, copilots:
 
 <v-clicks>
 
-- Are oriented towards a task (helping you learn about Star Wars purchases)
-- Have access to relevant local knowledge (purchase history from a database, Wookiepedia, Star Wars scripts)
-- Can perform actions (generate Star Wars images)
+- Are oriented towards a task (helping you learn about Star Wars)
+- Have access to relevant local knowledge (purchase history from a database, Wookiepedia)
+- Can perform actions (generate Star Wars images and stories)
 
 </v-clicks>
 
@@ -679,7 +635,6 @@ In this workshop you:
 - Learned about different types of messages and chat history
 - Created tools, starting with an internal tool then migrating to MCP
 - Learned about RAG using databases
-- Added semantic search using a vector database
 - Generated images using multimodal AI
 - Created a multi-agent system
 
@@ -703,7 +658,7 @@ You can find me all over the internet if you have questions about today
 
 ---
 layout: image-right
-image: /2025_SessionFeedback.png
+image: /feedback-code.png
 backgroundSize: 400px 400px
 ---
 

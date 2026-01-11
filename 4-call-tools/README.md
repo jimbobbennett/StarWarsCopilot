@@ -30,9 +30,9 @@ flowchart TD
     LTC --> R[Response]
 ```
 
-> There are LLM SDKs or AI frameworks that handle tool calling automatically, so they look like the LLM is calling the tool.
+> There are LLM SDKs or AI frameworks that handle tool calling automatically, so they look like the LLM is calling the tool. The SDK you are using does this. Internally the SDK intercepts the LLM response requesting the tool call, calls the tool, then passes the tool response back to the LLM.
 
-A tool is ideally designed to do one task. For example, if you wanted to model basic CRUD, you would have four tools - one tool to create a new record, one to replace a record, one to update, and one to delete.
+A tool is ideally designed to do one task. For example, if you wanted to model basic CRUD, you would have four tools - one tool to create a new record, one to replace a record, one to update, and one to delete. This makes it easier for the LLM to call the right tool.
 
 ## Expand your LLMs knowledge with a web search tool
 
