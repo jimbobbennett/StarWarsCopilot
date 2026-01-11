@@ -171,13 +171,13 @@ You can interact with models on Foundry Local using the OpenAI SDK.
 
     ```cs
     // Start the Foundry Local model
-    var manager = await FoundryLocalManager.StartModelAsync(llmOptions.ModelId);
+    var manager = await FoundryLocalManager.StartModelAsync(LLMOptions.Model);
     ```
 
 1. Add this code to create the OpenAI client. You can access models running through Foundry Local using the OpenAI API. The endpoint and API key come from the `FoundryLocalManager`.
 
     ```cs
-    var model = await manager.GetModelInfoAsync(llmOptions.ModelId);
+    var model = await manager.GetModelInfoAsync(LLMOptions.Model);
     var key = new ApiKeyCredential(manager.ApiKey);
     var openAIClient = new OpenAIClient(key, new OpenAIClientOptions
     {
