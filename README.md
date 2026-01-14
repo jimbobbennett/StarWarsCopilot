@@ -2,7 +2,7 @@
 
 Hello there!
 
-This repo contains a workshop with all the steps you need to follow to learn how to build your own Star Wars Copilot using C# and [`Microsoft.Extensions.AI`](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai). This is designed to be a taught workshop, with all the concepts you need to learn at each step taught by the presenter, with hands on exercises to implement each step.
+This repo contains a workshop with all the steps you need to follow to learn how to build your own Star Wars Copilot using C#, [`Microsoft.Extensions.AI`](https://learn.microsoft.com/dotnet/ai/microsoft-extensions-ai), and the [Microsoft Agent Framework](https://learn.microsoft.com/agent-framework/overview/agent-framework-overview). This is designed to be a taught workshop, with all the concepts you need to learn at each step taught by the presenter, with hands on exercises to implement each step.
 
 ## Prerequisites
 
