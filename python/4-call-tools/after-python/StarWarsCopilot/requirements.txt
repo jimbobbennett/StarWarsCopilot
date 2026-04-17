@@ -1,0 +1,5 @@
+agent-framework
+azure-ai-inference
+azure-core
+httpx
+python-dotenv

@@ -1,0 +1,5 @@
+agent-framework
+azure-ai-inference
+azure-core
+openai
+python-dotenv
