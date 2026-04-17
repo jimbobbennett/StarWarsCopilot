@@ -1,0 +1,5 @@
+azure-data-tables
+httpx
+mcp[cli]
+openai
+python-dotenv

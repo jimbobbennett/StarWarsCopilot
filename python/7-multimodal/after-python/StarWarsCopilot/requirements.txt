@@ -1,0 +1,6 @@
+agent-framework
+azure-ai-inference
+azure-core
+mcp[cli]
+openai
+python-dotenv
