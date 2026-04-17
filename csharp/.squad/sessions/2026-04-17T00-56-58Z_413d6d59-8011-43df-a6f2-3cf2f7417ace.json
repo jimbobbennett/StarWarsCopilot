@@ -1,7 +1,7 @@
 {
   "id": "413d6d59-8011-43df-a6f2-3cf2f7417ace",
   "createdAt": "2026-04-17T00:56:38.289Z",
-  "lastActiveAt": "2026-04-17T23:16:07.918Z",
+  "lastActiveAt": "2026-04-17T23:10:27.708Z",
   "messages": [
     {
       "role": "system",
@@ -154,18 +154,6 @@
       "agentName": "coordinator",
       "content": "Got it — I’ll relocate the Python-port changes into a top-level `python/` folder, then restore the original tracked files in place so the C# workshop content is back at the repo root.Done — the Python-related new content has been moved under a top-level `python/` folder, and tracked files in the root workshop are restored to the original C# state.\n\nCurrent git status is now just:\n- `?? python/`\n- `?? .squad/`\n\nI left `.squad/` untouched since it appears to be separate session/team metadata, not workshop source.",
       "timestamp": "2026-04-17T23:10:27.708Z"
-    },
-    {
-      "role": "agent",
-      "agentName": "coordinator",
-      "content": "I’ll snapshot the current tracked C# workshop into a new `csharp/` folder so it’s a clean copy of the original repo content.Done — I copied the current tracked workshop snapshot into `csharp/`.\n\n`csharp/` now contains the full workshop structure (e.g., `1-chat-with-copilot` … `8-agents`, `README.md`, `Tasks.md`, `slides`, etc.) as a standalone copy.",
-      "timestamp": "2026-04-17T23:14:15.710Z"
-    },
-    {
-      "role": "agent",
-      "agentName": "coordinator",
-      "content": "Updated. The top-level `README.md` now reflects the new layout:\n\n- Reframed as a combined workshop repo\n- Links to both `csharp/README.md` and `python/README.md`\n- Notes that both tracks follow the same 8-lesson flow\n- Replaced the old single-track lesson details with a concise `csharp/` and `python/` structure summary",
-      "timestamp": "2026-04-17T23:16:07.918Z"
     }
   ]
 }
